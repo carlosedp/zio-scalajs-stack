@@ -1,0 +1,55 @@
+*.class
+*.log
+
+# sbt specific
+.cache
+.history
+.lib/
+dist/*
+target/
+lib_managed/
+src_managed/
+project/boot/
+project/plugins/project/
+**/.bloop
+.bsp/
+
+# mill specific
+out/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+.idea
+
+.metals/
+.ammonite/
+metals.sbt
+metals/project/
+project/metals.sbt
+
+.vscode/
+
+local.*
+
+.DS_Store
+
+node_modules
+
+lib/core/metadata.js
+lib/core/MetadataBlog.js
+
+website/translated_docs
+website/build/
+website/yarn.lock
+website/node_modules
+website/i18n/*
+!website/i18n/en.json
+website/.docusaurus
+website/.cache-loader
+
+project/metals.sbt
+coursier
+
+# Sourcegraph specific
+index.scip
