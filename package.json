@@ -8,11 +8,11 @@
     "jsdom": "^20.0.0"
   },
   "scripts": {
-    "build": "mill frontend.fullLinkJS && NODE_ENV=production webpack --mode production",
-    "dev": "mill frontend.fastLinkJS",
-    "testall": "mill __.test",
-    "test": "mill frontend.test",
-    "watch": "mill -w frontend.test",
-    "cleanall": "rm -rf .bloop .vscode .metals .bsp out target project/.bloop project/{project,.bloop,target}"
+    "build": "./mill frontend.fullLinkJS && NODE_ENV=production webpack --mode production",
+    "dev": "./mill frontend.fastLinkJS",
+    "testall": "./mill __.test",
+    "test": "./mill frontend.test",
+    "watch": "./mill -w frontend.test",
+    "cleanall": "rm -rf .bloop .vscode .metals .bsp out target project/.bloop project/{project,.bloop,target} node_modules"
   }
 }
