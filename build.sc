@@ -17,7 +17,7 @@ object libVersion {
   val scalatest       = "3.2.11"
 }
 
-trait Common extends ScalaModule with Aliases with TpolecatModule {
+trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
   def scalaVersion    = libVersion.scala
   def scalafixIvyDeps = Agg(ivy"com.github.liancheng::organize-imports:${libVersion.organizeimports}")
   def scalacOptions   = T(super.scalacOptions() ++ Seq("-Xsemanticdb")) // Disable semanticDB since we use Scala 3
@@ -28,9 +28,7 @@ trait Common extends ScalaModule with Aliases with TpolecatModule {
       .map("https://" + _ + ".sonatype.org/content/repositories/snapshots")
       .map(MavenRepository(_))
   }
-}
 
-trait Aliases extends Module with ScalafmtModule with ScalafixModule {
   def style(): mill.define.Command[Unit] =
     T.command {
       reformat()()
