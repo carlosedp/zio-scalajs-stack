@@ -4,10 +4,9 @@ package zioscalajs.frontend
 import org.scalajs.dom
 import org.scalajs.dom.document
 import org.scalajs.dom.ext._
-
 import org.scalatest._
-import flatspec._
-import matchers._
+import org.scalatest.flatspec._
+import org.scalatest.matchers._
 
 class FrontEndSpec extends AnyFlatSpec with should.Matchers {
   // Initialize App

@@ -17,10 +17,9 @@ object libVersion {
   val scalatest       = "3.2.11"
 }
 
-trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
-  def scalaVersion    = libVersion.scala
-  def scalafixIvyDeps = Agg(ivy"com.github.liancheng::organize-imports:${libVersion.organizeimports}")
-  def scalacOptions   = T(super.scalacOptions() ++ Seq("-Xsemanticdb")) // Disable semanticDB since we use Scala 3
+trait Common extends ScalaModule with Aliases with TpolecatModule with ScalafmtModule with ScalafixModule {
+  override def scalaVersion = libVersion.scala
+  def scalafixIvyDeps       = Agg(ivy"com.github.liancheng::organize-imports:${libVersion.organizeimports}")
 
   // Add repositories for snapshot builds
   def repositoriesTask = T.task {
@@ -28,12 +27,9 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
       .map("https://" + _ + ".sonatype.org/content/repositories/snapshots")
       .map(MavenRepository(_))
   }
+}
 
-  def style(): mill.define.Command[Unit] =
-    T.command {
-      reformat()()
-      fix()()
-    }
+trait Aliases extends Module {
   // Format and fixes all files in all projects
   def lint(ev: mill.eval.Evaluator) = T.command {
     def findAllChildren(module: Module): Seq[Module] = {
@@ -50,8 +46,8 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
 
     findAllChildren(ev.rootModule).collect { case mod: ScalafmtModule with ScalafixModule => mod }.foreach { mod =>
       println(s"Formatting module $mod...")
-      eval(mod.fix())      // Organize imports
       eval(mod.reformat()) // Scalafmt
+      eval(mod.fix())      // Organize imports
     }
   }
 
@@ -65,14 +61,14 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
 // Projects
 // -----------------------------------------------------------------------------
 
-object all extends Common {} // Dummy target for some mill commands line "deps", "lint", etc.
+object all extends Common
 
 object backend extends Common {
   // Runtime dependencies
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${libVersion.zio}",
   )
-  object test extends Tests {
+  object test extends Tests with Common {
     // Test dependencies
     def ivyDeps = Agg(
       ivy"dev.zio::zio-test:${libVersion.zio}",
@@ -91,7 +87,7 @@ object frontend extends ScalaJSModule with Common {
   def jsEnvConfig = T(scalajslib.api.JsEnvConfig.JsDom())
   // def moduleKind  = T(scalajslib.api.ModuleKind.CommonJSModule)
 
-  object test extends Tests with TestModule.ScalaTest {
+  object test extends Tests with Common with TestModule.ScalaTest {
     // Test dependencies
     def ivyDeps = Agg(
       ivy"org.scalatest::scalatest::${libVersion.scalatest}",
