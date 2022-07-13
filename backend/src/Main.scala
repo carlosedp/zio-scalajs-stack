@@ -1,17 +1,20 @@
 package com.carlosedp
-package zioplay.backend
+package zioscalajs.backend
 
-import zio.Console._
+import zhttp.http._
+import zhttp.service.Server
 import zio._
 
-object MyApp extends ZIOAppDefault:
-  def run = myAppLogic.exitCode
+private val PORT = 8080
 
-  def hello = "Hello"
+object MainApp extends ZIOAppDefault:
 
-  val myAppLogic =
-    for
-      _    <- Console.print("Please enter your name: ")
-      name <- Console.readLine
-      _    <- Console.printLine(hello ++ s", $name!")
-    yield ()
+  def run = console *> server
+
+  val console = Console.printLine(s"Server started on http://localhost:${PORT}")
+
+  val server = Server
+    .start(
+      port = PORT,
+      http = GreetingApp(),
+    )

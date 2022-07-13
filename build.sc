@@ -11,13 +11,15 @@ import io.github.davidgregory084.TpolecatModule
 object libVersion {
   val scala           = "3.1.3"
   val scalajs         = "1.10.1"
-  val zio             = "2.0.0"
+  val zio             = "2.0.0-RC6" // Held at 2.0.0-RC6 until zio-http 2.0.0 is released due to binary dependency
+  val zhttp           = "2.0.0-RC9"
+  val sttp            = "3.6.2"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.2.0"
-  val scalatest       = "3.2.11"
+  val scalatest       = "3.2.12"
 }
 
-trait Common extends ScalaModule with Aliases with TpolecatModule with ScalafmtModule with ScalafixModule {
+trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
   override def scalaVersion = libVersion.scala
   def scalafixIvyDeps       = Agg(ivy"com.github.liancheng::organize-imports:${libVersion.organizeimports}")
 
@@ -29,32 +31,20 @@ trait Common extends ScalaModule with Aliases with TpolecatModule with ScalafmtM
   }
 }
 
-trait Aliases extends Module {
-  // Format and fixes all files in all projects
-  def lint(ev: mill.eval.Evaluator) = T.command {
-    def findAllChildren(module: Module): Seq[Module] = {
-      val children = module.millModuleDirectChildren
-      if (children.isEmpty) Seq(module)
-      else module +: children.flatMap(findAllChildren)
-    }
+// -----------------------------------------------------------------------------
+// Global commands
+// -----------------------------------------------------------------------------
 
-    def eval[T](e: mill.define.Task[T]): T =
-      ev.evaluate(mill.api.Strict.Agg(e)).values match {
-        case Seq()     => throw new NoSuchElementException
-        case Seq(e: T) => e
-      }
+def lint(ev: eval.Evaluator) = T.command {
+  mill.main.MainModule.evaluateTasks(
+    ev,
+    Seq("__.fix", "+", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll", "__.sources"),
+    mill.define.SelectMode.Separated,
+  )(identity)
+}
 
-    findAllChildren(ev.rootModule).collect { case mod: ScalafmtModule with ScalafixModule => mod }.foreach { mod =>
-      println(s"Formatting module $mod...")
-      eval(mod.reformat()) // Scalafmt
-      eval(mod.fix())      // Organize imports
-    }
-  }
-
-  // Checks for library updates in all projects
-  def deps(ev: eval.Evaluator) = T.command {
-    mill.scalalib.Dependency.showUpdates(ev)
-  }
+def deps(ev: eval.Evaluator) = T.command {
+  mill.scalalib.Dependency.showUpdates(ev)
 }
 
 // -----------------------------------------------------------------------------
@@ -67,6 +57,7 @@ object backend extends Common {
   // Runtime dependencies
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${libVersion.zio}",
+    ivy"io.d11::zhttp:${libVersion.zhttp}",
   )
   object test extends Tests with Common {
     // Test dependencies
@@ -83,8 +74,10 @@ object frontend extends ScalaJSModule with Common {
   def scalaJSUseMainModuleInitializer = true
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"org.scala-js::scalajs-dom::${libVersion.scalajsdom}",
+    ivy"com.softwaremill.sttp.client3::core::${libVersion.sttp}",
   )
-  def jsEnvConfig = T(scalajslib.api.JsEnvConfig.JsDom())
+
+  def jsEnvConfig = T(JsEnvConfig.JsDom())
   // def moduleKind  = T(scalajslib.api.ModuleKind.CommonJSModule)
 
   object test extends Tests with Common with TestModule.ScalaTest {

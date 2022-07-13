@@ -34,7 +34,8 @@ local.*
 
 .DS_Store
 
-node_modules
+/node_modules
+/build
 
 lib/core/metadata.js
 lib/core/MetadataBlog.js

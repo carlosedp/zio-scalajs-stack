@@ -7,12 +7,24 @@
   "dependencies": {
     "jsdom": "^20.0.0"
   },
+  "devDependencies": {
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "^8.1.0",
+    "html-webpack-plugin": "^4.5.1",
+    "webpack": "^5.73.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.9.3"
+  },
   "scripts": {
-    "build": "./mill frontend.fullLinkJS && NODE_ENV=production webpack --mode production",
-    "dev": "./mill frontend.fastLinkJS",
     "testall": "./mill __.test",
-    "test": "./mill frontend.test",
-    "watch": "./mill -w frontend.test",
-    "cleanall": "rm -rf .bloop .vscode .metals .bsp out target project/.bloop project/{project,.bloop,target} node_modules"
+    "lint": "./mill lint",
+    "deps": "./mill deps",
+    "build": "./mill frontend.fullLinkJS && NODE_ENV=production webpack --mode production",
+    "start": "./mill backend.runBackground && ./node_modules/.bin/webpack serve --mode development --hot --open --host=\"0.0.0.0\"",
+    "stop": "./mill clean backend.runBackground",
+    "dev": "./mill frontend.fastLinkJS && webpack --mode=development",
+    "testf": "./mill frontend.test",
+    "watchf": "./mill -w frontend.test",
+    "cleanall": "rm -rf .bloop .vscode .metals .bsp out target project/.bloop project/{project,.bloop,target} node_modules build"
   }
 }

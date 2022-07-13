@@ -1,21 +1,20 @@
 package com.carlosedp
-package zioplay.backend
+package zioscalajs.backend
 
 import zio._
 import zio.test.Assertion._
 import zio.test._
+import zhttp.http.*
+import com.carlosedp.zioscalajs.backend.MainApp
 
 object MainSpec extends ZIOSpecDefault:
 
-  def spec = suite("MainSpec")(
-    test("hello function returns hello") {
-      assertTrue(MyApp.hello == "Hello")
-    },
-    test("Main correctly displays output") {
-      for {
-        _      <- TestConsole.feedLines("User")
-        _      <- ZIO.collectAll(List.fill(1)(MyApp.myAppLogic))
-        output <- TestConsole.output
-      } yield assertTrue(output == Vector("Please enter your name: ", "Hello, User!\n"))
-    },
-  )
+  override def spec =
+    suite("Main backend application")(
+      test("should start") {
+        for {
+          _      <- MainApp.main
+          output <- TestConsole.output
+        } yield assertTrue(output.head contains "started")
+      },
+    )
