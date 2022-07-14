@@ -36,6 +36,7 @@ local.*
 
 /node_modules
 /build
+/dist
 
 lib/core/metadata.js
 lib/core/MetadataBlog.js

@@ -18,7 +18,3 @@ Libraries used (so far):
 2. Install NPM dependencies with `npm install`
 3. Generate the javascript for the frontend with `mill frontend.fastLinkJS`
 
-Remarks:
-
-- Currently the `index.html` file loads the fast generated javascript from `out` directory. In the future it will be properly packaged.
-

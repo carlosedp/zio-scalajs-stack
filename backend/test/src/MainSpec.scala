@@ -1,11 +1,11 @@
 package com.carlosedp
 package zioscalajs.backend
 
+import com.carlosedp.zioscalajs.backend.MainApp
+import zhttp.http.*
 import zio._
 import zio.test.Assertion._
 import zio.test._
-import zhttp.http.*
-import com.carlosedp.zioscalajs.backend.MainApp
 
 object MainSpec extends ZIOSpecDefault:
 
@@ -13,7 +13,7 @@ object MainSpec extends ZIOSpecDefault:
     suite("Main backend application")(
       test("should start") {
         for {
-          _      <- MainApp.main
+          _      <- MainApp.console
           output <- TestConsole.output
         } yield assertTrue(output.head contains "started")
       },

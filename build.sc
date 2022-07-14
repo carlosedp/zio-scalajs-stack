@@ -70,15 +70,25 @@ object backend extends Common {
 }
 
 object frontend extends ScalaJSModule with Common {
-  def scalaJSVersion                  = libVersion.scalajs
-  def scalaJSUseMainModuleInitializer = true
+  def scalaJSVersion = libVersion.scalajs
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"org.scala-js::scalajs-dom::${libVersion.scalajsdom}",
     ivy"com.softwaremill.sttp.client3::core::${libVersion.sttp}",
   )
 
-  def jsEnvConfig = T(JsEnvConfig.JsDom())
-  // def moduleKind  = T(scalajslib.api.ModuleKind.CommonJSModule)
+  def scalaJSUseMainModuleInitializer = true
+  def jsEnvConfig                     = T(JsEnvConfig.JsDom())
+  def moduleKind                      = T(ModuleKind.ESModule)
+  def moduleSplitStyle                = T(ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend")))
+
+  def fastLinkOut() = T.command {
+    val target = fastLinkJS()
+    println(target.dest.path)
+  }
+  def fullLinkOut() = T.command {
+    val target = fullLinkJS()
+    println(target.dest.path)
+  }
 
   object test extends Tests with Common with TestModule.ScalaTest {
     // Test dependencies
@@ -87,6 +97,6 @@ object frontend extends ScalaJSModule with Common {
     )
 
     def testFramework = T("org.scalatest.tools.Framework")
-    def jsEnvConfig   = T(scalajslib.api.JsEnvConfig.JsDom())
+    def jsEnvConfig   = T(JsEnvConfig.JsDom())
   }
 }
