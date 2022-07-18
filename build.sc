@@ -11,9 +11,9 @@ import io.github.davidgregory084.TpolecatModule
 object libVersion {
   val scala           = "3.1.3"
   val scalajs         = "1.10.1"
-  val zio             = "2.0.0-RC6" // Held at 2.0.0-RC6 until zio-http 2.0.0 is released due to binary dependency
-  val zhttp           = "2.0.0-RC9"
-  val sttp            = "3.6.2"
+  val zio             = "2.0.0"
+  val zhttp           = "2.0.0-RC10"
+  val sttp            = "3.7.0"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.2.0"
   val scalatest       = "3.2.12"
@@ -77,7 +77,6 @@ object frontend extends ScalaJSModule with Common {
   )
 
   def scalaJSUseMainModuleInitializer = true
-  def jsEnvConfig                     = T(JsEnvConfig.JsDom())
   def moduleKind                      = T(ModuleKind.ESModule)
   def moduleSplitStyle                = T(ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend")))
 
@@ -95,7 +94,6 @@ object frontend extends ScalaJSModule with Common {
     def ivyDeps = Agg(
       ivy"org.scalatest::scalatest::${libVersion.scalatest}",
     )
-
     def testFramework = T("org.scalatest.tools.Framework")
     def jsEnvConfig   = T(JsEnvConfig.JsDom())
   }

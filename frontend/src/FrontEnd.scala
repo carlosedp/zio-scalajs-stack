@@ -14,8 +14,8 @@ object FrontEndApp:
     document.addEventListener("DOMContentLoaded", (e: Event) => setupUI())
 
   def setupUI() =
-    val appnode = document.querySelector("#app")
-    addNode(appnode, "Welcome to Scala.js and Vite!", "h2")
+    val appnode = document.getElementById("app")
+    addNode(appnode, "Welcome to Scala.js and Vite!!!", "h2")
     val hellodiv = addNode(appnode, "", "div", "hello-div")
     val params   = document.location.search
     val name     = Option(URLSearchParams(params).get("name")).getOrElse("Stranger")
@@ -24,11 +24,10 @@ object FrontEndApp:
     addNode(appnode, "You clicked the button " + count.toString + " times.", "p", "clicked-message")
 
   def addNode(targetNode: Node, text: String, nodeType: String = "p", id: String = ""): Node =
-    val parNode = document.createElement(nodeType)
-    parNode.textContent = text
-    parNode.id = id
-    targetNode.appendChild(parNode)
-    parNode
+    val n = document.createElement(nodeType)
+    n.textContent = text
+    n.id = id
+    targetNode.appendChild(n)
 
   def updateNode(id: String, text: String) =
     val node = document.getElementById(id)
@@ -44,7 +43,7 @@ object FrontEndApp:
     targetNode.appendChild(buttonNode)
 
   var count = 0
-  @JSExportTopLevel("addClickedMessage")
+  // @JSExportTopLevel("addClickedMessage")
   def addClickedMessage() =
     count += 1
     updateNode("clicked-message", "You clicked the button " + count.toString + " times.")

@@ -1,7 +1,9 @@
 package com.carlosedp
 package zioscalajs.backend
 
+import zhttp.http.Middleware.cors
 import zhttp.http._
+import zhttp.http.middleware.Cors.CorsConfig
 
 /** An http app that:
   *   - Accepts a `Request` and returns a `Response`
@@ -10,28 +12,19 @@ import zhttp.http._
   */
 object GreetingApp {
   def apply(): Http[Any, Nothing, Request, Response] =
-    Http.collect[Request] {
-      // GET /greet
-      case Method.GET -> !! / "" =>
-        buildResponse("Index")
+    Http
+      .collect[Request] {
+        // GET /greet?name=:name
+        case req @ (Method.GET -> !! / "greet") if req.url.queryParams.nonEmpty =>
+          Response.text(s"Hello ${req.url.queryParams("name").mkString(" and ")}!")
 
-      // GET /greet?name=:name
-      case req @ (Method.GET -> !! / "greet") if req.url.queryParams.nonEmpty =>
-        buildResponse(s"Hello ${req.url.queryParams("name").mkString(" and ")}!")
+        // GET /greet/:name
+        case Method.GET -> !! / "greet" / name =>
+          Response.text(s"Hello $name!")
 
-      // GET /greet
-      case Method.GET -> !! / "greet" =>
-        buildResponse("Hello World!")
+        // GET /greet
+        case Method.GET -> !! / "greet" =>
+          Response.text("Hello World!")
+      } @@ cors(corsConfig)
 
-      // GET /greet/:name
-      case Method.GET -> !! / "greet" / name =>
-        buildResponse(s"Hello $name!")
-    }
-
-  def buildResponse(data: String) =
-    Response(
-      status = Status.Ok,
-      headers = Headers.accessControlAllowOrigin("*"),
-      data = HttpData.fromString(data),
-    )
 }
