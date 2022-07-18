@@ -28,11 +28,9 @@ object MainApp extends ZIOAppDefault:
 
 object HomeApp {
   def apply(): Http[Any, Nothing, Request, Response] =
-    Http
-      .collect[Request] {
-        // GET /, redirect to /greet
-        case Method.GET -> !! =>
-          Response.redirect("/greet")
-      } @@ cors(corsConfig)
-
+    Http.collect[Request] {
+      // GET /, redirect to /greet
+      case Method.GET -> !! =>
+        Response.redirect("/greet")
+    } @@ cors(corsConfig)
 }
