@@ -1,13 +1,12 @@
 package com.carlosedp
 package zioscalajs.backend
 
+import com.carlosedp.zioscalajs.shared.SharedConfig
 import zhttp.http.Middleware.cors
 import zhttp.http._
 import zhttp.http.middleware.Cors.CorsConfig
 import zhttp.service.Server
 import zio._
-
-private val PORT = 8080
 
 // Create CORS configuration
 private val corsConfig =
@@ -18,11 +17,11 @@ private val corsConfig =
 
 object MainApp extends ZIOAppDefault:
   def run     = console *> server
-  val console = Console.printLine(s"Server started on http://localhost:${PORT}")
+  val console = Console.printLine(s"Server started on http://localhost:${SharedConfig.serverPort}")
 
   val server = Server
     .start(
-      port = PORT,
+      port = SharedConfig.serverPort,
       http = HomeApp() ++ GreetingApp(),
     )
 

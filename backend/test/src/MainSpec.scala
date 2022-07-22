@@ -5,7 +5,6 @@ import zhttp.http._
 import zio._
 import zio.test.Assertion._
 import zio.test._
-import zhttp.http.HExit
 
 object MainSpec extends ZIOSpecDefault:
 

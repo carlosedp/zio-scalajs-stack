@@ -4,6 +4,7 @@ package zioscalajs.frontend
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.annotation.JSExportTopLevel
 
+import com.carlosedp.zioscalajs.shared.SharedConfig
 import org.scalajs.dom._
 import org.scalajs.dom.html._
 import sttp.client3._
@@ -19,7 +20,7 @@ object FrontEndApp:
     val hellodiv = addNode(appnode, "", "div", "hello-div")
     val params   = document.location.search
     val name     = Option(URLSearchParams(params).get("name")).getOrElse("Stranger")
-    queryBackend(s"http://localhost:8080/greet?name=${name}", addNode, hellodiv, "h1")
+    queryBackend(s"http://localhost:${SharedConfig.serverPort}/greet?name=${name}", addNode, hellodiv, "h1")
     addButton(appnode, "Click me", addClickedMessage)
     addNode(appnode, "You clicked the button " + count.toString + " times.", "p", "clicked-message")
 

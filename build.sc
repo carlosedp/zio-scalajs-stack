@@ -3,6 +3,8 @@ import mill.scalajslib._, mill.scalajslib.api._
 import scalafmt._
 import coursier.maven.MavenRepository
 
+import $ivy.`com.lihaoyi::mill-contrib-docker:$MILL_VERSION`
+import contrib.docker.DockerModule
 import $ivy.`com.goyeau::mill-scalafix::0.2.9`
 import com.goyeau.mill.scalafix.ScalafixModule
 import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.1`
@@ -29,6 +31,10 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
       .map("https://" + _ + ".sonatype.org/content/repositories/snapshots")
       .map(MavenRepository(_))
   }
+  def sources = T.sources(
+    millSourcePath / "src",
+    millSourcePath / os.up / "shared" / "src",
+  )
 }
 
 // -----------------------------------------------------------------------------
@@ -53,12 +59,18 @@ def deps(ev: eval.Evaluator) = T.command {
 
 object all extends Common
 
-object backend extends Common {
+object shared extends Common
+
+object backend extends Common with DockerModule {
   // Runtime dependencies
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${libVersion.zio}",
     ivy"io.d11::zhttp:${libVersion.zhttp}",
   )
+  object docker extends DockerConfig {
+    def tags         = List("docker.io/carlosedp/zioscalajs-backend")
+    def exposedPorts = Seq(8080)
+  }
   object test extends Tests with Common {
     // Test dependencies
     def ivyDeps = Agg(
