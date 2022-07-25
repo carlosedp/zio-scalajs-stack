@@ -15,7 +15,7 @@ object libVersion {
   val scalajs         = "1.10.1"
   val zio             = "2.0.0"
   val zhttp           = "2.0.0-RC10"
-  val sttp            = "3.7.0"
+  val sttp            = "3.7.1"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.2.0"
   val scalatest       = "3.2.12"
