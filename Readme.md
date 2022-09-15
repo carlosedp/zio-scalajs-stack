@@ -16,9 +16,11 @@ Libraries used:
 
 ## Development and Build
 
-1. Install a JDK and mill build tool in your path or use the bundled one
+1. Install a JDK in your path
 2. Install Node.js and npm
 3. Install NPM dependencies with `npm install`
 4. To start the development server, run `npm run start`, it will build the Scala.js Javascript files, start the ZIO backend and run Vite dev server. The Scala.js files are not automatically generated and reloaded. For this to work, open another shell and run `./mill -w frontend.fastLinkJS`.
+
+Open <http://localhost:5173> or <http://localhost:5173/?name=Yourname> for testing.
 
 To bundle the application for production, run `npm run build`. The files will be placed on `./dist`.
