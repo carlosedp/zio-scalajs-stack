@@ -20,7 +20,7 @@ object MainSpec extends ZIOSpecDefault:
       test("root route should redirect to /greet") {
         for {
           response <- homeApp(Request(url = URL(!!)))
-          body     <- response.bodyAsString
+          body     <- response.body.asString
         } yield assertTrue(
           response.status == Status.TemporaryRedirect,
           response.headers == Headers.location("/greet"),
