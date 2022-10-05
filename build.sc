@@ -12,19 +12,18 @@ import io.github.davidgregory084.TpolecatModule
 
 object libVersion {
   val scala           = "3.2.0"
-  val scalajs         = "1.10.1"
+  val scalajs         = "1.11.0"
   val zio             = "2.0.2"
   val zhttp           = "2.0.0-RC11"
-  val sttp            = "3.8.0"
+  val sttp            = "3.8.2"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.3.0"
-  val scalatest       = "3.2.13"
+  val scalatest       = "3.2.14"
 }
 
 trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
   override def scalaVersion = libVersion.scala
   def scalafixIvyDeps       = Agg(ivy"com.github.liancheng::organize-imports:${libVersion.organizeimports}")
-  // Add repositories for snapshot builds
   def repositoriesTask = T.task { // Add snapshot repositories in case needed
     super.repositoriesTask() ++ Seq("oss", "s01.oss")
       .map(r => s"https://$r.sonatype.org/content/repositories/snapshots")
@@ -37,26 +36,10 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
 }
 
 // -----------------------------------------------------------------------------
-// Global commands
-// -----------------------------------------------------------------------------
-
-def lint(ev: eval.Evaluator) = T.command {
-  mill.main.MainModule.evaluateTasks(
-    ev,
-    Seq("__.fix", "+", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll", "__.sources"),
-    mill.define.SelectMode.Separated,
-  )(identity)
-}
-
-def deps(ev: eval.Evaluator) = T.command {
-  mill.scalalib.Dependency.showUpdates(ev)
-}
-
-// -----------------------------------------------------------------------------
 // Projects
 // -----------------------------------------------------------------------------
 
-object shared extends Common
+// object shared extends Common
 
 object backend extends Common with DockerModule {
   // Runtime dependencies
@@ -90,6 +73,7 @@ object frontend extends ScalaJSModule with Common {
   def moduleKind                      = T(ModuleKind.ESModule)
   def moduleSplitStyle                = T(ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend")))
 
+  // These two tasks are used by Vite to get update path
   def fastLinkOut() = T.command {
     val target = fastLinkJS()
     println(target.dest.path)
@@ -106,4 +90,23 @@ object frontend extends ScalaJSModule with Common {
     )
     def jsEnvConfig = T(JsEnvConfig.JsDom())
   }
+}
+
+// -----------------------------------------------------------------------------
+// Global commands
+// -----------------------------------------------------------------------------
+
+// Toplevel commands
+def runTasks(t: Seq[String])(implicit ev: eval.Evaluator) = T.task {
+  mill.main.MainModule.evaluateTasks(
+    ev,
+    t.flatMap(x => x +: Seq("+")).flatMap(x => x.split(" ")).dropRight(1),
+    mill.define.SelectMode.Separated,
+  )(identity)
+}
+def lint(implicit ev: eval.Evaluator) = T.command {
+  runTasks(Seq("__.fix", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources"))
+}
+def deps(ev: eval.Evaluator) = T.command {
+  mill.scalalib.Dependency.showUpdates(ev)
 }

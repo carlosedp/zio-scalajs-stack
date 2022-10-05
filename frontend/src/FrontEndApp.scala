@@ -1,13 +1,12 @@
 package com.carlosedp
 package zioscalajs.frontend
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 import com.carlosedp.zioscalajs.shared.SharedConfig
 import org.scalajs.dom._
 import org.scalajs.dom.html._
-import sttp.client3._
+import sttp.client3.quick._
 
 object FrontEndApp:
 
@@ -56,9 +55,9 @@ object FrontEndApp:
     nodeType: String,
   ) =
     println(s"Querying backend: $uri...")
-    sttp.client3.quickRequest
-      .get(uri"$uri")
-      .send(FetchBackend())
+    implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+    simpleHttpClient
+      .send(quickRequest.get(uri"$uri"))
       .map { response =>
         callback(node, response.body, nodeType, "")
       }
