@@ -6,7 +6,7 @@
   "version": "0.0.1",
   "dependencies": {
     "jsdom": "^20.0.1",
-    "vite": "^3.1.4"
+    "vite": "^3.1.6"
   },
   "scripts": {
     "testall": "./mill __.test",
