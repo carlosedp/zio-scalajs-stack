@@ -10,6 +10,9 @@ import com.goyeau.mill.scalafix.ScalafixModule
 import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.1`
 import io.github.davidgregory084.TpolecatModule
 
+import $ivy.`com.carlosedp::mill-docker-nativeimage::0.1-SNAPSHOT`
+import com.carlosedp.milldockernative.DockerNative
+
 object libVersion {
   val scala           = "3.2.0"
   val scalajs         = "1.11.0"
@@ -41,12 +44,46 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
 
 // object shared extends Common
 
-object backend extends Common with DockerModule {
+object backend extends Common with DockerModule with DockerNative {
   // Runtime dependencies
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${libVersion.zio}",
     ivy"io.d11::zhttp:${libVersion.zhttp}",
   )
+
+  object dockerNative extends DockerNativeConfig {
+    def nativeImageName = "backend"
+    def nativeImageGraalVmJvmId = T {
+      sys.env.getOrElse("GRAALVM_ID", "graalvm-java17:22.2.0")
+    }
+    def nativeImageClassPath = runClasspath()
+    def nativeImageMainClass = "com.carlosedp.zioscalajs.backend.MainApp"
+    def nativeImageOptions = super.nativeImageOptions() ++ Seq(
+      "--no-fallback",
+      "--enable-url-protocols=http,https",
+      "-Djdk.http.auth.tunneling.disabledSchemes=",
+      // "--static", // Does not work on MacOS
+      "--no-fallback",
+      "--install-exit-handlers",
+      "--enable-http",
+      "--initialize-at-run-time=io.netty.channel.DefaultFileRegion",
+      "--initialize-at-run-time=io.netty.channel.epoll.Native",
+      "--initialize-at-run-time=io.netty.channel.epoll.Epoll",
+      "--initialize-at-run-time=io.netty.channel.epoll.EpollEventLoop",
+      "--initialize-at-run-time=io.netty.channel.epoll.EpollEventArray",
+      "--initialize-at-run-time=io.netty.channel.kqueue.KQueue",
+      "--initialize-at-run-time=io.netty.channel.kqueue.KQueueEventLoop",
+      "--initialize-at-run-time=io.netty.channel.kqueue.KQueueEventArray",
+      "--initialize-at-run-time=io.netty.channel.kqueue.Native",
+      "--initialize-at-run-time=io.netty.channel.unix.Limits",
+      "--initialize-at-run-time=io.netty.channel.unix.Errors",
+      "--initialize-at-run-time=io.netty.channel.unix.IovArray",
+      "--allow-incomplete-classpath",
+    )
+
+    def tags         = List("docker.io/carlosedp/zioscalajs-backend")
+    def exposedPorts = Seq(8080)
+  }
 
   object docker extends DockerConfig {
     def tags         = List("docker.io/carlosedp/zioscalajs-backend")
