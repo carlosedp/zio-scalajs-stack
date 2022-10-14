@@ -2,8 +2,7 @@ package com.carlosedp
 package zioscalajs.backend
 
 import zhttp.http.Middleware.cors
-import zhttp.http._
-import zhttp.http.middleware.Cors.CorsConfig
+import zhttp.http.*
 
 /** An http app that:
   *   - Accepts a `Request` and returns a `Response`
@@ -11,11 +10,6 @@ import zhttp.http.middleware.Cors.CorsConfig
   *   - Does not use the environment
   */
 object GreetingApp {
-  val corsConfig = CorsConfig(
-    allowedOrigins = _ == "*",
-    allowedMethods = Some(Set(Method.PUT, Method.DELETE, Method.POST, Method.GET)),
-  )
-
   def apply(): Http[Any, Nothing, Request, Response] =
     Http.collect[Request] {
       // GET /greet?name=:name
@@ -29,6 +23,6 @@ object GreetingApp {
       // GET /greet
       case Method.GET -> !! / "greet" =>
         Response.text("Hello World!")
-    } @@ cors(corsConfig)
+    } @@ cors(MainApp.corsConfig)
 
 }
