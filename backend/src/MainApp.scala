@@ -8,14 +8,7 @@ import zhttp.http.middleware.Cors.CorsConfig
 import zhttp.service.Server
 import zio._
 
-// Create CORS configuration
-private val corsConfig =
-  CorsConfig(
-    allowedOrigins = _ == "*",
-    allowedMethods = Some(Set(Method.PUT, Method.DELETE, Method.POST, Method.GET)),
-  )
-
-object MainApp extends ZIOAppDefault:
+object MainApp extends ZIOAppDefault {
   def run     = console *> server
   val console = Console.printLine(s"Server started on http://localhost:${SharedConfig.serverPort}")
 
@@ -25,11 +18,18 @@ object MainApp extends ZIOAppDefault:
       http = HomeApp() ++ GreetingApp(),
     )
 
-object HomeApp {
-  def apply(): Http[Any, Nothing, Request, Response] =
-    Http.collect[Request] {
-      // GET /, redirect to /greet
-      case Method.GET -> !! =>
-        Response.redirect("/greet")
-    } @@ cors(corsConfig)
+  object HomeApp {
+    val corsConfig = CorsConfig(
+      allowedOrigins = _ == "*",
+      allowedMethods = Some(Set(Method.PUT, Method.DELETE, Method.POST, Method.GET)),
+    )
+
+    def apply(): Http[Any, Nothing, Request, Response] =
+      // Create CORS configuration
+      Http.collect[Request] {
+        // GET /, redirect to /greet
+        case Method.GET -> !! =>
+          Response.redirect("/greet")
+      } @@ cors(corsConfig)
+  }
 }

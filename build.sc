@@ -10,11 +10,14 @@ import com.goyeau.mill.scalafix.ScalafixModule
 import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.1`
 import io.github.davidgregory084.TpolecatModule
 
-import $ivy.`com.carlosedp::mill-docker-nativeimage::0.1-SNAPSHOT`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.21`
+import io.github.alexarchambault.millnativeimage.NativeImage
+
+import $ivy.`com.carlosedp::mill-docker-nativeimage::0.0.1`
 import com.carlosedp.milldockernative.DockerNative
 
 object libVersion {
-  val scala           = "3.2.0"
+  val scala           = "2.13.10"
   val scalajs         = "1.11.0"
   val zio             = "2.0.2"
   val zhttp           = "2.0.0-RC11"
@@ -27,6 +30,8 @@ object libVersion {
 trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
   override def scalaVersion = libVersion.scala
   def scalafixIvyDeps       = Agg(ivy"com.github.liancheng::organize-imports:${libVersion.organizeimports}")
+  override def scalacPluginIvyDeps =
+    Agg(ivy"org.scalameta:::semanticdb-scalac:4.5.13")
   def repositoriesTask = T.task { // Add snapshot repositories in case needed
     super.repositoriesTask() ++ Seq("oss", "s01.oss")
       .map(r => s"https://$r.sonatype.org/content/repositories/snapshots")
@@ -44,43 +49,14 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
 
 // object shared extends Common
 
-object backend extends Common with DockerModule with DockerNative {
+object backend extends Common with DockerModule with DockerNative with NativeImage with NativeImageConfig {
   // Runtime dependencies
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${libVersion.zio}",
     ivy"io.d11::zhttp:${libVersion.zhttp}",
   )
 
-  object dockerNative extends DockerNativeConfig {
-    def nativeImageName = "backend"
-    def nativeImageGraalVmJvmId = T {
-      sys.env.getOrElse("GRAALVM_ID", "graalvm-java17:22.2.0")
-    }
-    def nativeImageClassPath = runClasspath()
-    def nativeImageMainClass = "com.carlosedp.zioscalajs.backend.MainApp"
-    def nativeImageOptions = super.nativeImageOptions() ++ Seq(
-      "--no-fallback",
-      "--enable-url-protocols=http,https",
-      "-Djdk.http.auth.tunneling.disabledSchemes=",
-      // "--static", // Does not work on MacOS
-      "--no-fallback",
-      "--install-exit-handlers",
-      "--enable-http",
-      "--initialize-at-run-time=io.netty.channel.DefaultFileRegion",
-      "--initialize-at-run-time=io.netty.channel.epoll.Native",
-      "--initialize-at-run-time=io.netty.channel.epoll.Epoll",
-      "--initialize-at-run-time=io.netty.channel.epoll.EpollEventLoop",
-      "--initialize-at-run-time=io.netty.channel.epoll.EpollEventArray",
-      "--initialize-at-run-time=io.netty.channel.kqueue.KQueue",
-      "--initialize-at-run-time=io.netty.channel.kqueue.KQueueEventLoop",
-      "--initialize-at-run-time=io.netty.channel.kqueue.KQueueEventArray",
-      "--initialize-at-run-time=io.netty.channel.kqueue.Native",
-      "--initialize-at-run-time=io.netty.channel.unix.Limits",
-      "--initialize-at-run-time=io.netty.channel.unix.Errors",
-      "--initialize-at-run-time=io.netty.channel.unix.IovArray",
-      "--allow-incomplete-classpath",
-    )
-
+  object dockerNative extends DockerNativeConfig with NativeImageConfig {
     def tags         = List("docker.io/carlosedp/zioscalajs-backend")
     def exposedPorts = Seq(8080)
   }
@@ -96,6 +72,40 @@ object backend extends Common with DockerModule with DockerNative {
       ivy"dev.zio::zio-test-sbt:${libVersion.zio}",
     )
     def testFramework = T("zio.test.sbt.ZTestFramework")
+  }
+}
+
+trait NativeImageConfig extends JavaModule with NativeImage {
+  def nativeImageName      = "backend"
+  def nativeImageClassPath = runClasspath()
+  def nativeImageGraalVmJvmId = T {
+    sys.env.getOrElse("GRAALVM_ID", "graalvm-java17:22.2.0")
+  }
+  // def nativeImageClassPath = runClasspath()
+  def nativeImageMainClass = "com.carlosedp.zioscalajs.backend.MainApp"
+  def nativeImageOptionsDef = Seq(
+    "--no-fallback",
+    "--enable-url-protocols=http,https",
+    "-Djdk.http.auth.tunneling.disabledSchemes=",
+    "--install-exit-handlers",
+    "--enable-http",
+    "--initialize-at-run-time=io.netty.channel.DefaultFileRegion",
+    "--initialize-at-run-time=io.netty.channel.epoll.Native",
+    "--initialize-at-run-time=io.netty.channel.epoll.Epoll",
+    "--initialize-at-run-time=io.netty.channel.epoll.EpollEventLoop",
+    "--initialize-at-run-time=io.netty.channel.epoll.EpollEventArray",
+    "--initialize-at-run-time=io.netty.channel.kqueue.KQueue",
+    "--initialize-at-run-time=io.netty.channel.kqueue.KQueueEventLoop",
+    "--initialize-at-run-time=io.netty.channel.kqueue.KQueueEventArray",
+    "--initialize-at-run-time=io.netty.channel.kqueue.Native",
+    "--initialize-at-run-time=io.netty.channel.unix.Limits",
+    "--initialize-at-run-time=io.netty.channel.unix.Errors",
+    "--initialize-at-run-time=io.netty.channel.unix.IovArray",
+    "--allow-incomplete-classpath",
+  )
+  def nativeImageOptions = System.getProperty("os.name").toLowerCase match {
+    case os if os.contains("linux") => nativeImageOptionsDef ++ Seq("--static")
+    case os if os.contains("mac")   => nativeImageOptionsDef
   }
 }
 

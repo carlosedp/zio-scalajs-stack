@@ -11,6 +11,11 @@ import zhttp.http.middleware.Cors.CorsConfig
   *   - Does not use the environment
   */
 object GreetingApp {
+  val corsConfig = CorsConfig(
+    allowedOrigins = _ == "*",
+    allowedMethods = Some(Set(Method.PUT, Method.DELETE, Method.POST, Method.GET)),
+  )
+
   def apply(): Http[Any, Nothing, Request, Response] =
     Http.collect[Request] {
       // GET /greet?name=:name
