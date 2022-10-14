@@ -1,14 +1,12 @@
 package com.carlosedp
 package zioscalajs.backend
 
-import zhttp.http._
-import zio._
-import zio.test.Assertion._
-import zio.test._
+import zhttp.http.*
+import zio.test.*
 
-object MainSpec extends ZIOSpecDefault:
+object MainSpec extends ZIOSpecDefault {
 
-  def homeApp = HomeApp()
+  def homeApp = MainApp.HomeApp()
   def spec =
     suite("Main backend application")(
       test("should show start message") {
@@ -28,3 +26,4 @@ object MainSpec extends ZIOSpecDefault:
         )
       },
     )
+}
