@@ -49,22 +49,30 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
 
 // object shared extends Common
 
-object backend extends Common with DockerModule with DockerNative with NativeImage with NativeImageConfig {
-  // Runtime dependencies
+object backend
+  extends Common    // Base config for the backend
+  with NativeImage  // Build binary based on GrallVM Native Image
+  with DockerModule // Build Docker images based on JVM using the app .jar
+  with DockerNative // Build Docker images with app binary (GraalVM Native Image)
+  with NativeImageConfig { // Uses config for Native image
+  def nativeImageClassPath = runClasspath()
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${libVersion.zio}",
     ivy"io.d11::zhttp:${libVersion.zhttp}",
   )
 
   object dockerNative extends DockerNativeConfig with NativeImageConfig {
-    def tags         = List("docker.io/carlosedp/zioscalajs-backend")
-    def exposedPorts = Seq(8080)
+    def nativeImageClassPath = runClasspath()
+    def baseImage            = "debian"
+    def tags                 = List("docker.io/carlosedp/zioscalajs-backend")
+    def exposedPorts         = Seq(8080)
   }
 
   object docker extends DockerConfig {
     def tags         = List("docker.io/carlosedp/zioscalajs-backend")
     def exposedPorts = Seq(8080)
   }
+
   object test extends Tests with Common {
     // Test dependencies
     def ivyDeps = Agg(
@@ -75,15 +83,14 @@ object backend extends Common with DockerModule with DockerNative with NativeIma
   }
 }
 
-trait NativeImageConfig extends JavaModule with NativeImage {
-  def nativeImageName      = "backend"
-  def nativeImageClassPath = runClasspath()
+// Shared config trait for Native Image and DockerNative build
+trait NativeImageConfig extends NativeImage {
+  def nativeImageName = "backend"
   def nativeImageGraalVmJvmId = T {
     sys.env.getOrElse("GRAALVM_ID", "graalvm-java17:22.2.0")
   }
-  // def nativeImageClassPath = runClasspath()
   def nativeImageMainClass = "com.carlosedp.zioscalajs.backend.MainApp"
-  def nativeImageOptionsDef = Seq(
+  def nativeImageOptions = Seq(
     "--no-fallback",
     "--enable-url-protocols=http,https",
     "-Djdk.http.auth.tunneling.disabledSchemes=",
@@ -102,11 +109,7 @@ trait NativeImageConfig extends JavaModule with NativeImage {
     "--initialize-at-run-time=io.netty.channel.unix.Errors",
     "--initialize-at-run-time=io.netty.channel.unix.IovArray",
     "--allow-incomplete-classpath",
-  )
-  def nativeImageOptions = System.getProperty("os.name").toLowerCase match {
-    case os if os.contains("linux") => nativeImageOptionsDef ++ Seq("--static")
-    case os if os.contains("mac")   => nativeImageOptionsDef
-  }
+  ) ++ (if (System.getProperty("os.name").contains("Linux")) Seq("--static") else Seq.empty)
 }
 
 object frontend extends ScalaJSModule with Common {
