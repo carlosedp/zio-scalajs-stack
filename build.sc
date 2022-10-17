@@ -22,7 +22,7 @@ object versions {
   val scalajs         = "1.11.0"
   val zio             = "2.0.2"
   val zhttp           = "2.0.0-RC11"
-  val sttp            = "3.8.2"
+  val sttp            = "3.8.3"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.3.0"
   val scalatest       = "3.2.14"
@@ -39,14 +39,11 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
       .map(r => s"https://$r.sonatype.org/content/repositories/snapshots")
       .map(MavenRepository(_))
   }
-  // override def scalacOptions = super.scalacOptions() ++ Seq("-Xsource:3")
 }
 
 // -----------------------------------------------------------------------------
 // Projects
 // -----------------------------------------------------------------------------
-
-// object shared extends Common
 
 object backend
   extends Common    // Base config for the backend
@@ -63,16 +60,18 @@ object backend
   override def scalacPluginIvyDeps =
     Agg(ivy"org.scalameta:::semanticdb-scalac:4.5.13")
 
+  def dockerImage = "docker.io/carlosedp/zioscalajs-backend"
+  def dockerPort  = 8080
   object dockerNative extends DockerNativeConfig with NativeImageConfig {
     def nativeImageClassPath = runClasspath()
     def baseImage            = "debian"
-    def tags                 = List("docker.io/carlosedp/zioscalajs-backend")
-    def exposedPorts         = Seq(8080)
+    def tags                 = List(dockerImage)
+    def exposedPorts         = Seq(dockerPort)
   }
 
   object docker extends DockerConfig {
-    def tags         = List("docker.io/carlosedp/zioscalajs-backend")
-    def exposedPorts = Seq(8080)
+    def tags         = List(dockerImage)
+    def exposedPorts = Seq(dockerPort)
   }
 
   object test extends Tests with Common {
