@@ -91,6 +91,8 @@ trait NativeImageConfig extends NativeImage {
     sys.env.getOrElse("GRAALVM_ID", "graalvm-java17:22.2.0")
   }
   def nativeImageMainClass = "com.carlosedp.zioscalajs.backend.MainApp"
+  // Options required by ZIO to be built by GraalVM
+  // Ref. https://github.com/jamesward/hello-zio-http/blob/graalvm/build.sbt#L97-L108
   def nativeImageOptions = Seq(
     "--no-fallback",
     "--enable-url-protocols=http,https",
@@ -111,6 +113,22 @@ trait NativeImageConfig extends NativeImage {
     "--initialize-at-run-time=io.netty.channel.unix.IovArray",
     "--allow-incomplete-classpath",
   ) ++ (if (System.getProperty("os.name").contains("Linux")) Seq("--static") else Seq.empty)
+
+  // Define parameters to have the Native Image to be built in Docker
+  // generating a Linux binary to be packed into the container image.
+  def nativeImageDockerParams = Some(
+    NativeImage.DockerParams(
+      imageName = "ubuntu:18.04",
+      prepareCommand = """apt-get update -q -y &&\
+                         |apt-get install -q -y f build-essential libz-dev locales
+                         |locale-gen en_US.UTF-8
+                         |export LANG=en_US.UTF-8
+                         |export LANGUAGE=en_US:en
+                         |export LC_ALL=en_US.UTF-8""".stripMargin,
+      csUrl = s"https://github.com/coursier/coursier/releases/download/v2.1.0-M7-18-g67daad6a9/cs-x86_64-pc-linux.gz",
+      extraNativeImageArgs = Nil,
+    ),
+  )
 }
 
 object frontend extends ScalaJSModule with Common {
