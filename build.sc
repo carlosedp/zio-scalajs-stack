@@ -117,22 +117,25 @@ trait NativeImageConfig extends NativeImage {
 
   // Define parameters to have the Native Image to be built in Docker
   // generating a Linux binary to be packed into the container image.
-  def nativeImageDockerParams = if (sys.env.get("LOCAL_NATIVEIMAGE") == None) {
-    Some(
-      NativeImage.DockerParams(
-        imageName = "ubuntu:18.04",
-        prepareCommand = """apt-get update -q -y &&\
-                           |apt-get install -q -y build-essential libz-dev locales
-                           |locale-gen en_US.UTF-8
-                           |export LANG=en_US.UTF-8
-                           |export LANGUAGE=en_US:en
-                           |export LC_ALL=en_US.UTF-8""".stripMargin,
-        csUrl =
-          s"https://github.com/coursier/coursier/releases/download/${versions.coursier}/cs-${sys.props.get("os.arch").get}-pc-linux.gz",
-        extraNativeImageArgs = Nil,
-      ),
-    )
-  } else { Option.empty[NativeImage.DockerParams] }
+  def isDockerBuild = T.input(T.ctx.env.get("LOCAL_NATIVEIMAGE") == None)
+  def nativeImageDockerParams = T {
+    if (isDockerBuild()) {
+      Some(
+        NativeImage.DockerParams(
+          imageName = "ubuntu:18.04",
+          prepareCommand = """apt-get update -q -y &&\
+                             |apt-get install -q -y build-essential libz-dev locales --no-install-recommends
+                             |locale-gen en_US.UTF-8
+                             |export LANG=en_US.UTF-8
+                             |export LANGUAGE=en_US:en
+                             |export LC_ALL=en_US.UTF-8""".stripMargin,
+          csUrl =
+            s"https://github.com/coursier/coursier/releases/download/${versions.coursier}/cs-${sys.props.get("os.arch").get}-pc-linux.gz",
+          extraNativeImageArgs = Nil,
+        ),
+      )
+    } else { Option.empty[NativeImage.DockerParams] }
+  }
 }
 
 object frontend extends ScalaJSModule with Common {
