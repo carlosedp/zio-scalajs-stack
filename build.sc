@@ -26,6 +26,7 @@ object versions {
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.3.0"
   val scalatest       = "3.2.14"
+  val coursier        = "v2.1.0-M7-18-g67daad6a9"
 }
 
 trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
@@ -112,23 +113,26 @@ trait NativeImageConfig extends NativeImage {
     "--initialize-at-run-time=io.netty.channel.unix.Errors",
     "--initialize-at-run-time=io.netty.channel.unix.IovArray",
     "--allow-incomplete-classpath",
-  ) ++ (if (System.getProperty("os.name").contains("Linux")) Seq("--static") else Seq.empty)
+  ) ++ (if (sys.props.get("os.name").contains("Linux")) Seq("--static") else Seq.empty)
 
   // Define parameters to have the Native Image to be built in Docker
   // generating a Linux binary to be packed into the container image.
-  def nativeImageDockerParams = Some(
-    NativeImage.DockerParams(
-      imageName = "ubuntu:18.04",
-      prepareCommand = """apt-get update -q -y &&\
-                         |apt-get install -q -y f build-essential libz-dev locales
-                         |locale-gen en_US.UTF-8
-                         |export LANG=en_US.UTF-8
-                         |export LANGUAGE=en_US:en
-                         |export LC_ALL=en_US.UTF-8""".stripMargin,
-      csUrl = s"https://github.com/coursier/coursier/releases/download/v2.1.0-M7-18-g67daad6a9/cs-x86_64-pc-linux.gz",
-      extraNativeImageArgs = Nil,
-    ),
-  )
+  def nativeImageDockerParams = if (sys.env.get("LOCAL_NATIVEIMAGE") == None) {
+    Some(
+      NativeImage.DockerParams(
+        imageName = "ubuntu:18.04",
+        prepareCommand = """apt-get update -q -y &&\
+                           |apt-get install -q -y build-essential libz-dev locales
+                           |locale-gen en_US.UTF-8
+                           |export LANG=en_US.UTF-8
+                           |export LANGUAGE=en_US:en
+                           |export LC_ALL=en_US.UTF-8""".stripMargin,
+        csUrl =
+          s"https://github.com/coursier/coursier/releases/download/${versions.coursier}/cs-${sys.props.get("os.arch").get}-pc-linux.gz",
+        extraNativeImageArgs = Nil,
+      ),
+    )
+  } else { Option.empty[NativeImage.DockerParams] }
 }
 
 object frontend extends ScalaJSModule with Common {
