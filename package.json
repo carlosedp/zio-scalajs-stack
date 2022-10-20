@@ -5,8 +5,7 @@
   "license": "MIT",
   "version": "0.0.1",
   "dependencies": {
-    "jsdom": "^20.0.1",
-    "vite": "^3.1.7"
+    "jsdom": "^20.0.1"
   },
   "scripts": {
     "testall": "./mill __.test",
@@ -19,9 +18,11 @@
     "dev": "./node_modules/.bin/vite",
     "testf": "./mill frontend.test",
     "watchf": "./mill -w frontend.test",
+    "watchb": "./mill -w backend.runBackground",
     "cleanall": "rm -rf .bloop .vscode .metals .bsp out target project/.bloop project/{project,.bloop,target} node_modules dist"
   },
   "devDependencies": {
+    "vite": "^3.1.7",
     "sass": "^1.55.0"
   }
 }

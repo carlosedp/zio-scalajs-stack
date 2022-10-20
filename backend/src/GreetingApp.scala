@@ -24,5 +24,4 @@ object GreetingApp {
       case Method.GET -> !! / "greet" =>
         Response.text("Hello World!")
     } @@ cors(MainApp.corsConfig)
-
 }

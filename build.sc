@@ -76,7 +76,6 @@ object backend
   }
 
   object test extends Tests with Common {
-    // Test dependencies
     def ivyDeps = Agg(
       ivy"dev.zio::zio-test:${versions.zio}",
       ivy"dev.zio::zio-test-sbt:${versions.zio}",
@@ -151,14 +150,8 @@ object frontend extends ScalaJSModule with Common {
   def moduleSplitStyle                = T(ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend")))
 
   // These two tasks are used by Vite to get update path
-  def fastLinkOut() = T.command {
-    val target = fastLinkJS()
-    println(target.dest.path)
-  }
-  def fullLinkOut() = T.command {
-    val target = fullLinkJS()
-    println(target.dest.path)
-  }
+  def fastLinkOut() = T.command(println(fastLinkJS().dest.path))
+  def fullLinkOut() = T.command(println(fullLinkJS().dest.path))
 
   object test extends Tests with Common with TestModule.ScalaTest {
     // Test dependencies
