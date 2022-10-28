@@ -1,7 +1,6 @@
 package com.carlosedp
 package zioscalajs.backend
 
-import zhttp.http.Middleware.cors
 import zhttp.http.*
 
 /** An http app that:
@@ -23,5 +22,5 @@ object GreetingApp {
       // GET /greet
       case Method.GET -> !! / "greet" =>
         Response.text("Hello World!")
-    } @@ cors(MainApp.corsConfig)
+    }
 }

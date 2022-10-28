@@ -1,5 +1,6 @@
 import mill._, mill.scalalib._
 import mill.scalajslib._, mill.scalajslib.api._
+import mill.scalalib.api.Util.isScala3
 import scalafmt._
 import coursier.maven.MavenRepository
 
@@ -24,6 +25,7 @@ object versions {
   val zhttp           = "2.0.0-RC11"
   val sttp            = "3.8.3"
   val organizeimports = "0.6.0"
+  val semanticdb      = "4.5.13"
   val scalajsdom      = "2.3.0"
   val scalatest       = "3.2.14"
   val coursier        = "v2.1.0-M7-18-g67daad6a9"
@@ -58,8 +60,10 @@ object backend
     ivy"dev.zio::zio:${versions.zio}",
     ivy"io.d11::zhttp:${versions.zhttp}",
   )
-  override def scalacPluginIvyDeps =
-    Agg(ivy"org.scalameta:::semanticdb-scalac:4.5.13")
+  def scalacPluginIvyDeps =
+    super.scalacPluginIvyDeps() ++ (if (!isScala3(scalaVersion()))
+                                      Agg(ivy"org.scalameta:::semanticdb-scalac:${versions.semanticdb}")
+                                    else Agg.empty)
 
   def dockerImage = "docker.io/carlosedp/zioscalajs-backend"
   def dockerPort  = 8080
@@ -88,7 +92,7 @@ object backend
 trait NativeImageConfig extends NativeImage {
   def nativeImageName = "backend"
   def nativeImageGraalVmJvmId = T {
-    sys.env.getOrElse("GRAALVM_ID", "graalvm-java17:22.2.0")
+    sys.env.getOrElse("GRAALVM_ID", "graalvm-java17:22.3.0")
   }
   def nativeImageMainClass = "com.carlosedp.zioscalajs.backend.MainApp"
   // Options required by ZIO to be built by GraalVM
@@ -111,12 +115,12 @@ trait NativeImageConfig extends NativeImage {
     "--initialize-at-run-time=io.netty.channel.unix.Limits",
     "--initialize-at-run-time=io.netty.channel.unix.Errors",
     "--initialize-at-run-time=io.netty.channel.unix.IovArray",
-    "--allow-incomplete-classpath",
+    // "--allow-incomplete-classpath",
   ) ++ (if (sys.props.get("os.name").contains("Linux")) Seq("--static") else Seq.empty)
 
   // Define parameters to have the Native Image to be built in Docker
   // generating a Linux binary to be packed into the container image.
-  def isDockerBuild = T.input(T.ctx.env.get("LOCAL_NATIVEIMAGE") == None)
+  def isDockerBuild = T.input(T.ctx.env.get("DOCKER_NATIVEIMAGE") != None)
   def nativeImageDockerParams = T {
     if (isDockerBuild()) {
       Some(

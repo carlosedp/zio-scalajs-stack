@@ -6,7 +6,7 @@ import zio.test.*
 
 object MainSpec extends ZIOSpecDefault {
 
-  def homeApp = MainApp.HomeApp()
+  def homeApp = HomeApp()
   def spec =
     suite("Main backend application")(
       test("should show start message") {

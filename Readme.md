@@ -21,9 +21,9 @@ The build process supports the following targets:
 
 **Backend:**
 
-- Generate Native Image (GraalVM) binary for Linux in Docker: `mill backend.nativeImage`
-- Generate Native Image (GraalVM) binary for current platform (Eg. Mac): `LOCAL_NATIVEIMAGE=1 mill backend.nativeImage`
-- Generate Docker Image with Native Image (for Linux in Docker): `mill backend.dockerNative.build`
+- Generate Native Image (GraalVM) binary for current platform with locally installed GraalVM (Eg. Mac): `mill backend.nativeImage`
+- Generate Native Image (GraalVM) binary in Docker container (for Linux): `DOCKER_NATIVEIMAGE=1 mill backend.nativeImage`
+- Generate Docker Image with Native Image binary (for Linux in Docker): `mill backend.dockerNative.build`
 - Generate Docker Image with a JVM base and .jar app: `mill backend.docker.build`
 
 **Frontend:**
