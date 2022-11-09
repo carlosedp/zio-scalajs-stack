@@ -1,0 +1,21 @@
+pull_request_rules:
+  - name: Automatic merge on approval and CI success
+    conditions:
+      - base=main
+      - label="please merge"
+      - status-success=test
+      - "#review-requested=0"
+    actions:
+      merge:
+        method: squash
+
+  - name: Automatic merge Dependabot PRs (for actions) on CI success
+    conditions:
+      - base=main
+      - author=dependabot[bot]
+      - files~=^.github/workflows/
+      - status-success=test
+      - "#review-requested=0"
+    actions:
+      merge:
+        method: squash
