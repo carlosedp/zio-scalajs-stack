@@ -16,9 +16,9 @@
     "start": "./mill backend.runBackground && ./node_modules/.bin/vite",
     "stop": "./mill clean backend.runBackground",
     "dev": "./node_modules/.bin/vite",
-    "testf": "./mill frontend.test",
-    "watchf": "./mill -w frontend.test",
-    "watchb": "./mill -w backend.runBackground",
+    "testfe": "./mill frontend.test",
+    "watchfe": "./mill -w frontend.test",
+    "watchbe": "bash -c \"trap 'mill clean backend.runBackground' EXIT; mill -w backend.runBackground\"",
     "cleanall": "rm -rf .bloop .vscode .metals .bsp out target project/.bloop project/{project,.bloop,target} node_modules dist"
   },
   "devDependencies": {
