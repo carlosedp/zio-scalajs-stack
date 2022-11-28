@@ -1,7 +1,8 @@
 package com.carlosedp
 package zioscalajs.backend
 
-import zhttp.http.*
+import zio.http.*
+import zio.http.model.*
 import zio.test.*
 
 object GreetingAppSpec extends ZIOSpecDefault {
@@ -11,7 +12,7 @@ object GreetingAppSpec extends ZIOSpecDefault {
     suite("Greet backend application")(
       test("should greet world") {
         for {
-          response <- greetApp(Request(url = URL(!! / "greet")))
+          response <- greetApp(Request.get(URL(!! / "greet")))
           body     <- response.body.asString
         } yield assertTrue(
           response.status == Status.Ok,
@@ -20,7 +21,7 @@ object GreetingAppSpec extends ZIOSpecDefault {
       },
       test("should greet User if using path") {
         for {
-          response <- greetApp(Request(url = URL(!! / "greet" / "User")))
+          response <- greetApp(Request.get(URL(!! / "greet" / "User")))
           body     <- response.body.asString
         } yield assertTrue(
           response.status == Status.Ok,
@@ -29,7 +30,7 @@ object GreetingAppSpec extends ZIOSpecDefault {
       },
       test("should greet User if using param") {
         for {
-          response <- greetApp(Request(url = URL(!! / "greet").setQueryParams("?name=User")))
+          response <- greetApp(Request.get(URL(!! / "greet").setQueryParams("?name=User")))
           body     <- response.body.asString
         } yield assertTrue(
           response.status == Status.Ok,

@@ -1,7 +1,8 @@
 package com.carlosedp
 package zioscalajs.backend
 
-import zhttp.http.*
+import zio.http.*
+import zio.http.model.*
 import zio.test.*
 
 object MainSpec extends ZIOSpecDefault {
@@ -17,7 +18,7 @@ object MainSpec extends ZIOSpecDefault {
       },
       test("root route should redirect to /greet") {
         for {
-          response <- homeApp(Request(url = URL(!!)))
+          response <- homeApp(Request.get(URL(!!)))
           body     <- response.body.asString
         } yield assertTrue(
           response.status == Status.TemporaryRedirect,

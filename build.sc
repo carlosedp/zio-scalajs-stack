@@ -6,23 +6,21 @@ import coursier.maven.MavenRepository
 
 import $ivy.`com.lihaoyi::mill-contrib-docker:$MILL_VERSION`
 import contrib.docker.DockerModule
-import $ivy.`com.goyeau::mill-scalafix::0.2.10`
+import $ivy.`com.goyeau::mill-scalafix::0.2.11`
 import com.goyeau.mill.scalafix.ScalafixModule
 import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.1`
 import io.github.davidgregory084.TpolecatModule
-
 import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.22`
 import io.github.alexarchambault.millnativeimage.NativeImage
-
-import $ivy.`com.carlosedp::mill-docker-nativeimage::0.1.1`
+import $ivy.`com.carlosedp::mill-docker-nativeimage::0.2.0`
 import com.carlosedp.milldockernative.DockerNative
 
 object versions {
   val scala213        = "2.13.10"
-  val scala3          = "3.2.0"
+  val scala3          = "3.2.1"
   val scalajs         = "1.11.0"
-  val zio             = "2.0.2"
-  val zhttp           = "2.0.0-RC11"
+  val zio             = "2.0.4"
+  val ziohttp         = "0.0.3"
   val sttp            = "3.8.3"
   val organizeimports = "0.6.0"
   val semanticdb      = "4.5.13"
@@ -58,13 +56,12 @@ object backend
   def nativeImageClassPath = runClasspath()
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${versions.zio}",
-    ivy"io.d11::zhttp:${versions.zhttp}",
+    ivy"dev.zio::zio-http:${versions.ziohttp}",
   )
   def scalacPluginIvyDeps =
     super.scalacPluginIvyDeps() ++ (if (!isScala3(scalaVersion()))
                                       Agg(ivy"org.scalameta:::semanticdb-scalac:${versions.semanticdb}")
                                     else Agg.empty)
-
   def dockerImage = "docker.io/carlosedp/zioscalajs-backend"
   def dockerPort  = 8080
   object dockerNative extends DockerNativeConfig with NativeImageConfig {

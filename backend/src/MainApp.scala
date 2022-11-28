@@ -2,10 +2,11 @@ package com.carlosedp
 package zioscalajs.backend
 
 import com.carlosedp.zioscalajs.shared.SharedConfig
-import zhttp.http.*
-import zhttp.http.middleware.Cors.CorsConfig
-import zhttp.service.Server
 import zio.*
+import zio.http.*
+import zio.http.model.Method
+import zio.http.ServerConfig.LeakDetectionLevel
+import zio.http.middleware.Cors.CorsConfig
 
 object MainApp extends ZIOAppDefault {
   val corsConfig = CorsConfig(
@@ -16,14 +17,18 @@ object MainApp extends ZIOAppDefault {
   )
 
   val console = Console.printLine(s"Server started on http://localhost:${SharedConfig.serverPort}")
+
   // Add route managers and middleware
   val httpProg = HomeApp() ++ GreetingApp() @@ Middleware.cors(MainApp.corsConfig) @@ Middleware.debug
 
-  val server = Server
-    .start(
-      port = SharedConfig.serverPort,
-      http = httpProg,
-    )
+  // Server config
+  val config =
+    ServerConfig.default
+      .port(SharedConfig.serverPort)
+      .leakDetection(LeakDetectionLevel.PARANOID)
+      .maxThreads(2)
+
+  val server = Server.serve(httpProg).provide(ServerConfig.live(config), Server.live)
 
   def run = console *> server
 }
