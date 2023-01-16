@@ -1,3 +1,4 @@
+import mill.define.Target
 import mill._, mill.scalalib._
 import mill.scalajslib._, mill.scalajslib.api._
 import mill.scalalib.api.Util.isScala3
@@ -19,14 +20,15 @@ object versions {
   val scala213        = "2.13.10"
   val scala3          = "3.2.1"
   val scalajs         = "1.11.0"
-  val zio             = "2.0.4"
+  val zio             = "2.0.5"
+  val ziometrics      = "2.0.4"
   val ziohttp         = "0.0.3"
-  val sttp            = "3.8.3"
+  val sttp            = "3.8.8"
   val organizeimports = "0.6.0"
   val semanticdb      = "4.5.13"
   val scalajsdom      = "2.3.0"
-  val scalatest       = "3.2.14"
-  val coursier        = "v2.1.0-M7-18-g67daad6a9"
+  val scalatest       = "3.2.15"
+  val coursier        = "v2.1.0-RC4"
 }
 
 trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
@@ -57,6 +59,8 @@ object backend
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${versions.zio}",
     ivy"dev.zio::zio-http:${versions.ziohttp}",
+    ivy"dev.zio::zio-metrics-connectors:${versions.ziometrics}",
+    ivy"dev.zio::zio-logging:2.1.7",
   )
   def scalacPluginIvyDeps =
     super.scalacPluginIvyDeps() ++ (if (!isScala3(scalaVersion()))
