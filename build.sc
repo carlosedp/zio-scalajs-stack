@@ -19,7 +19,7 @@ import com.carlosedp.milldockernative.DockerNative
 object versions {
   val scala213        = "2.13.10"
   val scala3          = "3.2.1"
-  val scalajs         = "1.11.0"
+  val scalajs         = "1.12.0"
   val zio             = "2.0.5"
   val ziometrics      = "2.0.4"
   val ziohttp         = "0.0.3"
