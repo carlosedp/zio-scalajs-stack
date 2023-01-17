@@ -1,17 +1,15 @@
-import mill.define.Target
-import mill._, mill.scalalib._
+import mill._, mill.scalalib._, mill.scalalib.scalafmt._
 import mill.scalajslib._, mill.scalajslib.api._
 import mill.scalalib.api.Util.isScala3
-import scalafmt._
 import coursier.maven.MavenRepository
 
 import $ivy.`com.lihaoyi::mill-contrib-docker:$MILL_VERSION`
 import contrib.docker.DockerModule
 import $ivy.`com.goyeau::mill-scalafix::0.2.11`
 import com.goyeau.mill.scalafix.ScalafixModule
-import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.1`
+import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.2`
 import io.github.davidgregory084.TpolecatModule
-import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.22`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
 import io.github.alexarchambault.millnativeimage.NativeImage
 import $ivy.`com.carlosedp::mill-docker-nativeimage::0.2.0`
 import com.carlosedp.milldockernative.DockerNative
