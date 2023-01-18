@@ -22,9 +22,10 @@ object Main extends ZIOAppDefault {
     Runtime.removeDefaultLoggers >>> consoleJson(LogFormat.colored) ++ logMetrics
 
   // Add routes and middleware
-  val httpRoutes = (MetricsApp() ++ HomeApp() ++ GreetingApp()) @@ Middleware.cors(
-    corsConfig,
-  ) @@ Middleware.metrics(MetricsApp.pathLabelMapper) @@ Middleware.debug
+  val httpRoutes = (MetricsApp() ++ HomeApp() ++ GreetingApp())
+    @@ Middleware.cors(corsConfig)
+    @@ Middleware.metrics(MetricsApp.pathLabelMapper)
+    @@ Middleware.debug
 
   // ZIO-http server config
   val config =
@@ -44,6 +45,7 @@ object Main extends ZIOAppDefault {
       ZLayer.succeed(MetricsConfig(200.millis)), // Metrics pull interval from internal store
     )
 
+  // Run the application
   def run: ZIO[Scope, Any, ExitCode] =
     for {
       _ <- ZIO.logInfo(s"Server started at http://localhost:${SharedConfig.serverPort}")
