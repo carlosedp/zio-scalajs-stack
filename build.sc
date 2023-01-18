@@ -18,15 +18,16 @@ object versions {
   val scala213        = "2.13.10"
   val scala3          = "3.2.1"
   val scalajs         = "1.12.0"
-  val zio             = "2.0.5"
-  val ziometrics      = "2.0.4"
+  val zio             = "2.0.6"
+  val ziometrics      = "2.0.5"
+  val ziologging      = "2.1.7"
   val ziohttp         = "0.0.3"
   val sttp            = "3.8.8"
   val organizeimports = "0.6.0"
-  val semanticdb      = "4.5.13"
   val scalajsdom      = "2.3.0"
   val scalatest       = "3.2.15"
   val coursier        = "v2.1.0-RC4"
+  val graalvm         = "graalvm-java17:22.3.0"
 }
 
 trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
@@ -58,12 +59,8 @@ object backend
     ivy"dev.zio::zio:${versions.zio}",
     ivy"dev.zio::zio-http:${versions.ziohttp}",
     ivy"dev.zio::zio-metrics-connectors:${versions.ziometrics}",
-    ivy"dev.zio::zio-logging:2.1.7",
+    ivy"dev.zio::zio-logging:${versions.ziologging}",
   )
-  def scalacPluginIvyDeps =
-    super.scalacPluginIvyDeps() ++ (if (!isScala3(scalaVersion()))
-                                      Agg(ivy"org.scalameta:::semanticdb-scalac:${versions.semanticdb}")
-                                    else Agg.empty)
   def dockerImage = "docker.io/carlosedp/zioscalajs-backend"
   def dockerPort  = 8080
   object dockerNative extends DockerNativeConfig with NativeImageConfig {
@@ -88,20 +85,19 @@ object backend
 }
 
 // Shared config trait for Native Image and DockerNative build
-trait NativeImageConfig extends NativeImage {
-  def nativeImageName = "backend"
-  def nativeImageGraalVmJvmId = T {
-    sys.env.getOrElse("GRAALVM_ID", "graalvm-java17:22.3.0")
-  }
-  def nativeImageMainClass = "com.carlosedp.zioscalajs.backend.MainApp"
+// Using the JavaModule to access the module's main class and name for the binary
+trait NativeImageConfig extends NativeImage with JavaModule {
+  def nativeImageName         = this.toString
+  def nativeImageMainClass    = finalMainClass()
+  def nativeImageGraalVmJvmId = T(sys.env.getOrElse("GRAALVM_ID", versions.graalvm))
   // Options required by ZIO to be built by GraalVM
   // Ref. https://github.com/jamesward/hello-zio-http/blob/graalvm/build.sbt#L97-L108
   def nativeImageOptions = Seq(
     "--no-fallback",
-    "--enable-url-protocols=http,https",
-    "-Djdk.http.auth.tunneling.disabledSchemes=",
-    "--install-exit-handlers",
     "--enable-http",
+    "--enable-url-protocols=http,https",
+    "--install-exit-handlers",
+    "-Djdk.http.auth.tunneling.disabledSchemes=",
     "--initialize-at-run-time=io.netty.channel.DefaultFileRegion",
     "--initialize-at-run-time=io.netty.channel.epoll.Native",
     "--initialize-at-run-time=io.netty.channel.epoll.Epoll",
@@ -114,25 +110,30 @@ trait NativeImageConfig extends NativeImage {
     "--initialize-at-run-time=io.netty.channel.unix.Limits",
     "--initialize-at-run-time=io.netty.channel.unix.Errors",
     "--initialize-at-run-time=io.netty.channel.unix.IovArray",
-    // "--allow-incomplete-classpath",
+    "--initialize-at-run-time=io.netty.handler.ssl.BouncyCastleAlpnSslUtils",
+    "--initialize-at-run-time=io.netty.handler.codec.compression.ZstdOptions",
+    "--initialize-at-run-time=io.netty.incubator.channel.uring.Native",
+    "--initialize-at-run-time=io.netty.incubator.channel.uring.IOUringEventLoopGroup",
   ) ++ (if (sys.props.get("os.name").contains("Linux")) Seq("--static") else Seq.empty)
 
   // Define parameters to have the Native Image to be built in Docker
   // generating a Linux binary to be packed into the container image.
-  def isDockerBuild = T.input(T.ctx.env.get("DOCKER_NATIVEIMAGE") != None)
+  def isDockerBuild   = T.input(T.ctx.env.get("DOCKER_NATIVEIMAGE") != None)
+  def baseDockerImage = "carlosedp/nativeimagebase:18.04"
+  def coursierDownloadURL =
+    s"https://github.com/coursier/coursier/releases/download/${versions.coursier}/cs-${sys.props.get("os.arch").get}-pc-linux.gz"
+  def buildBaseDockerImage =
+    T.input {
+      os.proc("docker", "build", "-t", baseDockerImage, ".", "-f", "Dockerfile").call(check = false)
+      baseDockerImage
+    }
   def nativeImageDockerParams = T {
-    if (isDockerBuild()) {
+    if (isDockerBuild() == true) {
       Some(
         NativeImage.DockerParams(
-          imageName = "ubuntu:18.04",
-          prepareCommand = """apt-get update -q -y &&\
-                             |apt-get install -q -y build-essential libz-dev locales --no-install-recommends
-                             |locale-gen en_US.UTF-8
-                             |export LANG=en_US.UTF-8
-                             |export LANGUAGE=en_US:en
-                             |export LC_ALL=en_US.UTF-8""".stripMargin,
-          csUrl =
-            s"https://github.com/coursier/coursier/releases/download/${versions.coursier}/cs-${sys.props.get("os.arch").get}-pc-linux.gz",
+          imageName = buildBaseDockerImage(),
+          prepareCommand = "",
+          csUrl = coursierDownloadURL,
           extraNativeImageArgs = Nil,
         ),
       )
@@ -166,10 +167,9 @@ object frontend extends ScalaJSModule with Common {
 }
 
 // -----------------------------------------------------------------------------
-// Global commands
+// Command Aliases
 // -----------------------------------------------------------------------------
 
-// Toplevel commands
 def runTasks(t: Seq[String])(implicit ev: eval.Evaluator) = T.task {
   mill.main.MainModule.evaluateTasks(
     ev,
@@ -180,6 +180,9 @@ def runTasks(t: Seq[String])(implicit ev: eval.Evaluator) = T.task {
 def lint(implicit ev: eval.Evaluator) = T.command {
   runTasks(Seq("__.fix", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources"))
 }
-def deps(ev: eval.Evaluator) = T.command {
+def deps(implicit ev: eval.Evaluator) = T.command {
   mill.scalalib.Dependency.showUpdates(ev)
+}
+def testall(implicit ev: eval.Evaluator) = T.command {
+  runTasks(Seq("__.test"))
 }
