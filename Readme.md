@@ -26,6 +26,8 @@ The build process supports the following targets:
 - Generate Docker Image with Native Image binary (for Linux in Docker): `mill backend.dockerNative.build`
 - Generate Docker Image with a JVM base and .jar app: `mill backend.docker.build`
 
+If GraalVM fails building the binary on Linux, install libz-dev (Eg. `sudo apt-get install libz-dev` on Ubuntu/Debian or `sudo dnf install zlib-devel` on Fedora).
+
 **Frontend:**
 
 - Build application for deployment (install nodejs, npm and `npm i` first): `npm run build`

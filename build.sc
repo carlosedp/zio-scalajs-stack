@@ -113,6 +113,7 @@ trait NativeImageConfig extends NativeImage with JavaModule {
     "--initialize-at-run-time=io.netty.handler.ssl.BouncyCastleAlpnSslUtils",
     "--initialize-at-run-time=io.netty.handler.codec.compression.ZstdOptions",
     "--initialize-at-run-time=io.netty.incubator.channel.uring.Native",
+    "--initialize-at-run-time=io.netty.incubator.channel.uring.IOUring",
     "--initialize-at-run-time=io.netty.incubator.channel.uring.IOUringEventLoopGroup",
   ) ++ (if (sys.props.get("os.name").contains("Linux")) Seq("--static") else Seq.empty)
 
