@@ -5,7 +5,7 @@
   "license": "MIT",
   "version": "0.0.1",
   "dependencies": {
-    "jsdom": "^21.0.0"
+    "jsdom": "^21.1.0"
   },
   "scripts": {
     "testall": "./mill __.test",
