@@ -16,7 +16,7 @@ import com.carlosedp.milldockernative.DockerNative
 
 object versions {
   val scala213        = "2.13.10"
-  val scala3          = "3.2.1"
+  val scala3          = "3.3.0-RC2"
   val scalajs         = "1.12.0"
   val zio             = "2.0.6"
   val ziometrics      = "2.0.5"
@@ -53,7 +53,10 @@ object backend
   with DockerModule // Build Docker images based on JVM using the app .jar
   with DockerNative // Build Docker images with app binary (GraalVM Native Image)
   with NativeImageConfig { // Uses config for Native image
-  def scalaVersion = versions.scala213
+  def scalaVersion = versions.scala3
+  override def scalacOptions = T {
+    super.scalacOptions() ++ Seq("-Wunused:imports")
+  }
 
   def nativeImageClassPath = runClasspath()
   def ivyDeps = super.ivyDeps() ++ Agg(

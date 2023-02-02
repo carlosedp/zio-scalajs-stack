@@ -7,16 +7,15 @@ import zio.http.model.Method
 import zio.metrics.connectors.prometheus.PrometheusPublisher
 import zio.metrics.{Metric, MetricLabel}
 
-def httpHitsMetric(method: String, path: String) =
-  Metric
-    .counter("httphits")
-    .fromConst(1)
-    .tagged(MetricLabel("method", method), MetricLabel("path", path))
-
 // Create the Prometheus router exposing metrics in "/metrics" and incrementing a counter
 object MetricsApp {
   // Sample metrics
-  val randomdouble = Metric.gauge("randomdouble")
+  def httpHitsMetric(method: String, path: String) =
+    Metric
+      .counter("httphits")
+      .fromConst(1)
+      .tagged(MetricLabel("method", method), MetricLabel("path", path))
+  val randomdouble: Metric.Gauge[Double] = Metric.gauge("randomdouble")
   val gaugeTest: UIO[Double] =
     for {
       double <- Random.nextDoubleBetween(1.0, 200.0) @@ randomdouble
@@ -32,6 +31,6 @@ object MetricsApp {
     Http.collectZIO[Request] { case Method.GET -> !! / "metrics" =>
       ZIO.serviceWithZIO[PrometheusPublisher](
         _.get.map(Response.text),
-      ) @@ httpHitsMetric("GET", "/metrics")
+      ) @@ MetricsApp.httpHitsMetric("GET", "/metrics")
     }
 }
