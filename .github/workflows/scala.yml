@@ -27,18 +27,22 @@ jobs:
     - uses: coursier/cache-action@v6
       id: coursier-cache
 
+    - name: Check Formatting
+      run: ./mill mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources
+
     - name: Setup Nodejs
       uses: actions/setup-node@v3
       with:
-        node-version: 18
+        node-version: 19
 
     - name: Install dependencies
       run: npm install
 
     - name: Run tests for all projects
-      run: ./mill __.test
+      run: ./mill testall
+
+    # - name: Run code coverage
+    #   run: ./mill coverage
 
     # - name: Upload coverage to Codecov
     #   uses: codecov/codecov-action@v3
-    #   with:
-    #     files: ./scoverage-data/scoverage.coverage

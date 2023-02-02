@@ -1,14 +1,17 @@
 # Full Stack Scala 3 + ZIO + Scala.js
 
-An experimental stack built with Scala 3 and composed of a ZIO backend and a Scala.js frontend.
+An experimental stack built with Scala 3 and composed of a ZIO backend and a Scala.js frontend. The backend includes logging and metrics for observability.
 
 Libraries used:
 
 - Scala 3
 - ZIO
+  - zio-http
+  - zio-logging
+  - zio-metrics
+  - zio-test
 - Scala.js
 - scalajsdom
-- zio-test for the backend
 - scalatest for the frontend
 - Nodejs
   - jsdom
@@ -22,7 +25,7 @@ The build process supports the following targets:
 **Backend:**
 
 - Generate Native Image (GraalVM) binary for current platform with locally installed GraalVM (Eg. Mac): `mill backend.nativeImage`
-- Generate Native Image (GraalVM) binary in Docker container (for Linux): `DOCKER_NATIVEIMAGE=1 mill backend.nativeImage`
+- Generate Native Image (GraalVM) Linux binary in Docker container: `DOCKER_NATIVEIMAGE=1 mill backend.nativeImage`
 - Generate Docker Image with Native Image binary (for Linux in Docker): `mill backend.dockerNative.build`
 - Generate Docker Image with a JVM base and .jar app: `mill backend.docker.build`
 

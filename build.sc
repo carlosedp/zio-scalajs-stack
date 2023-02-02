@@ -20,9 +20,9 @@ object versions {
   val scalajs         = "1.12.0"
   val zio             = "2.0.6"
   val ziometrics      = "2.0.5"
-  val ziologging      = "2.1.7"
+  val ziologging      = "2.1.8"
   val ziohttp         = "0.0.3"
-  val sttp            = "3.8.8"
+  val sttp            = "3.8.9"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.3.0"
   val scalatest       = "3.2.15"
@@ -53,7 +53,8 @@ object backend
   with DockerModule // Build Docker images based on JVM using the app .jar
   with DockerNative // Build Docker images with app binary (GraalVM Native Image)
   with NativeImageConfig { // Uses config for Native image
-  def scalaVersion         = versions.scala213
+  def scalaVersion = versions.scala213
+
   def nativeImageClassPath = runClasspath()
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${versions.zio}",
