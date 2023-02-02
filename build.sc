@@ -68,7 +68,7 @@ object backend
   def dockerPort  = 8080
   object dockerNative extends DockerNativeConfig with NativeImageConfig {
     // Config for the Native binary (GraalVM) based Docker image
-    override def isDockerBuild = T.input(true)
+    override def isDockerBuild = T.input(sys.props.get("os.name").contains("Linux") == false)
     def nativeImageClassPath   = runClasspath()
     def baseImage              = "ubuntu:22.04"
     def tags                   = List(dockerImage + "-native")
