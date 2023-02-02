@@ -11,12 +11,12 @@ import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.2`
 import io.github.davidgregory084.TpolecatModule
 import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
 import io.github.alexarchambault.millnativeimage.NativeImage
-import $ivy.`com.carlosedp::mill-docker-nativeimage::0.2.0`
+import $ivy.`com.carlosedp::mill-docker-nativeimage::0.3.0`
 import com.carlosedp.milldockernative.DockerNative
 
 object versions {
   val scala3          = "3.3.0-RC2"
-  val scalajs         = "1.12.0"
+  val scalajs         = "1.13.0"
   val zio             = "2.0.6"
   val ziometrics      = "2.0.5"
   val ziologging      = "2.1.8"
@@ -25,8 +25,8 @@ object versions {
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.3.0"
   val scalatest       = "3.2.15"
-  val coursier        = "v2.1.0-RC4"
-  val graalvm         = "graalvm-java17:22.3.0"
+  val coursier        = "v2.1.0-RC5"
+  val graalvm         = "graalvm-java17:22.3.1"
 }
 
 trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
@@ -52,29 +52,33 @@ object backend
   with DockerModule // Build Docker images based on JVM using the app .jar
   with DockerNative // Build Docker images with app binary (GraalVM Native Image)
   with NativeImageConfig { // Uses config for Native image
-  def scalaVersion = versions.scala3
-  override def scalacOptions = T {
-    super.scalacOptions() ++ Seq("-Wunused:imports")
-  }
-
+  def scalaVersion         = versions.scala3
   def nativeImageClassPath = runClasspath()
+  override def scalacOptions = T {
+    super.scalacOptions() ++ Seq("-Wunused:imports") // Can be removed once it's integrated into tpolecat
+  }
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${versions.zio}",
     ivy"dev.zio::zio-http:${versions.ziohttp}",
     ivy"dev.zio::zio-metrics-connectors:${versions.ziometrics}",
     ivy"dev.zio::zio-logging:${versions.ziologging}",
   )
+
   def dockerImage = "docker.io/carlosedp/zioscalajs-backend"
   def dockerPort  = 8080
   object dockerNative extends DockerNativeConfig with NativeImageConfig {
-    def nativeImageClassPath = runClasspath()
-    def baseImage            = "debian"
-    def tags                 = List(dockerImage)
-    def exposedPorts         = Seq(dockerPort)
+    // Config for the Native binary (GraalVM) based Docker image
+    override def isDockerBuild = T.input(true)
+    def nativeImageClassPath   = runClasspath()
+    def baseImage              = "ubuntu:22.04"
+    def tags                   = List(dockerImage + "-native")
+    def exposedPorts           = Seq(dockerPort)
   }
 
   object docker extends DockerConfig {
-    def tags         = List(dockerImage)
+    // Config for the JVM based Docker image
+    def baseImage    = "eclipse-temurin:17-jdk"
+    def tags         = List(dockerImage + "-jdk")
     def exposedPorts = Seq(dockerPort)
   }
 
@@ -89,9 +93,9 @@ object backend
 
 // Shared config trait for Native Image and DockerNative build
 // Using the JavaModule to access the module's main class and name for the binary
-trait NativeImageConfig extends NativeImage with JavaModule {
-  def nativeImageName         = this.toString
-  def nativeImageMainClass    = finalMainClass()
+trait NativeImageConfig extends NativeImage {
+  def nativeImageName         = "backend"
+  def nativeImageMainClass    = "com.carlosedp.zioscalajs.backend.Main"
   def nativeImageGraalVmJvmId = T(sys.env.getOrElse("GRAALVM_ID", versions.graalvm))
   // Options required by ZIO to be built by GraalVM
   // Ref. https://github.com/jamesward/hello-zio-http/blob/graalvm/build.sbt#L97-L108
@@ -123,13 +127,13 @@ trait NativeImageConfig extends NativeImage with JavaModule {
   // Define parameters to have the Native Image to be built in Docker
   // generating a Linux binary to be packed into the container image.
   def isDockerBuild   = T.input(T.ctx.env.get("DOCKER_NATIVEIMAGE") != None)
-  def baseDockerImage = "carlosedp/nativeimagebase:18.04"
+  def baseDockerImage = T("carlosedp/nativeimagebase:22.04")
   def coursierDownloadURL =
     s"https://github.com/coursier/coursier/releases/download/${versions.coursier}/cs-${sys.props.get("os.arch").get}-pc-linux.gz"
   def buildBaseDockerImage =
     T.input {
-      os.proc("docker", "build", "-t", baseDockerImage, ".", "-f", "Dockerfile").call(check = false)
-      baseDockerImage
+      os.proc("docker", "build", "-t", baseDockerImage(), ".", "-f", "Dockerfile.nativeImage").call(check = false)
+      baseDockerImage()
     }
   def nativeImageDockerParams = T {
     if (isDockerBuild() == true) {
@@ -173,20 +177,22 @@ object frontend extends ScalaJSModule with Common {
 // -----------------------------------------------------------------------------
 // Command Aliases
 // -----------------------------------------------------------------------------
+val aliases = Map(
+  "lint"    -> Seq("__.fix", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources"),
+  "fmt"     -> Seq("mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources"),
+  "deps"    -> Seq("mill.scalalib.Dependency/showUpdates"),
+  "testall" -> Seq("__.test"),
+)
 
-def runTasks(t: Seq[String])(implicit ev: eval.Evaluator) = T.task {
-  mill.main.MainModule.evaluateTasks(
-    ev,
-    t.flatMap(x => x +: Seq("+")).flatMap(x => x.split(" ")).dropRight(1),
-    mill.define.SelectMode.Separated,
-  )(identity)
-}
-def lint(implicit ev: eval.Evaluator) = T.command {
-  runTasks(Seq("__.fix", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources"))
-}
-def deps(implicit ev: eval.Evaluator) = T.command {
-  mill.scalalib.Dependency.showUpdates(ev)
-}
-def testall(implicit ev: eval.Evaluator) = T.command {
-  runTasks(Seq("__.test"))
+// The toplevel alias runner
+def run(ev: eval.Evaluator, alias: String) = T.command {
+  aliases.get(alias) match {
+    case Some(t) =>
+      mill.main.MainModule.evaluateTasks(
+        ev,
+        t.flatMap(x => x +: Seq("+")).flatMap(x => x.split(" ")).dropRight(1),
+        mill.define.SelectMode.Separated,
+      )(identity)
+    // case None => println(s"The task alias "$alias" does not exist.")
+  }
 }

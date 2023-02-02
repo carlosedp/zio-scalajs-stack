@@ -28,7 +28,7 @@ jobs:
       id: coursier-cache
 
     - name: Check Formatting
-      run: ./mill mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources
+      run: ./mill run fmt
 
     - name: Setup Nodejs
       uses: actions/setup-node@v3
@@ -39,7 +39,7 @@ jobs:
       run: npm install
 
     - name: Run tests for all projects
-      run: ./mill testall
+      run: ./mill run testall
 
     # - name: Run code coverage
     #   run: ./mill coverage

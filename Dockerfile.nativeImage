@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 RUN apt-get update -q -y && \
     apt-get install -q -y build-essential libz-dev locales --no-install-recommends
