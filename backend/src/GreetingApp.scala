@@ -15,8 +15,8 @@ object GreetingApp {
     Http.collectZIO[Request] {
       // GET /greet?name=:name
       case req @ (Method.GET -> !! / "greet") if req.url.queryParams.nonEmpty =>
-        ZIO.succeed(Response.text(s"Hello ${req.url.queryParams("name").mkString(" and ")}!"))
-          @@ MetricsApp.httpHitsMetric("GET", "/greet/$names")
+        ZIO.succeed(Response.text(s"Hello ${req.url.queryParams("name").mkString(" and ")}!")) @@
+          MetricsApp.httpHitsMetric("GET", "/greet/$names")
 
       // GET /greet/:name
       case Method.GET -> !! / "greet" / name =>

@@ -15,7 +15,6 @@ import $ivy.`com.carlosedp::mill-docker-nativeimage::0.2.0`
 import com.carlosedp.milldockernative.DockerNative
 
 object versions {
-  val scala213        = "2.13.10"
   val scala3          = "3.3.0-RC2"
   val scalajs         = "1.12.0"
   val zio             = "2.0.6"
