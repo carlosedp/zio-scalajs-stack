@@ -1,11 +1,11 @@
 package com.carlosedp
 package zioscalajs.frontend
 
-import org.scalajs.dom._
-import org.scalajs.dom.ext._
-import org.scalatest._
-import org.scalatest.flatspec._
-import org.scalatest.matchers._
+import org.scalajs.dom.*
+import org.scalajs.dom.ext.*
+import org.scalatest.*
+import org.scalatest.flatspec.*
+import org.scalatest.matchers.*
 
 class FrontEndSpec extends AnyFlatSpec with should.Matchers {
   // Initialize Test for elements we don't create in Scala.js (exists in index.html)

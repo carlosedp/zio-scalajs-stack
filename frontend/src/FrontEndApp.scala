@@ -4,9 +4,9 @@ package zioscalajs.frontend
 import scala.scalajs.js.annotation.JSExportTopLevel
 
 import com.carlosedp.zioscalajs.shared.SharedConfig
-import org.scalajs.dom._
-import org.scalajs.dom.html._
-import sttp.client3.quick._
+import org.scalajs.dom.*
+import org.scalajs.dom.html.*
+import sttp.client3.quick.*
 
 object FrontEndApp:
 

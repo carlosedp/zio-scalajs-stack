@@ -1,6 +1,7 @@
 package com.carlosedp
 package zioscalajs.backend
 
+import zio.*
 import zio.http.*
 import zio.http.model.Method
 
@@ -11,17 +12,19 @@ import zio.http.model.Method
   */
 object GreetingApp {
   def apply(): Http[Any, Nothing, Request, Response] =
-    Http.collect[Request] {
+    Http.collectZIO[Request] {
       // GET /greet?name=:name
       case req @ (Method.GET -> !! / "greet") if req.url.queryParams.nonEmpty =>
-        Response.text(s"Hello ${req.url.queryParams("name").mkString(" and ")}!")
+        ZIO.succeed(Response.text(s"Hello ${req.url.queryParams("name").mkString(" and ")}!"))
+        @@ httpHitsMetric ("GET", "/greet/$names")
 
       // GET /greet/:name
       case Method.GET -> !! / "greet" / name =>
-        Response.text(s"Hello $name!")
+        ZIO.succeed(Response.text(s"Hello $name!")) @@ httpHitsMetric("GET", s"/greet/$name")
 
       // GET /greet
       case Method.GET -> !! / "greet" =>
-        Response.text("Hello World!")
+        // httpHitsMetric("GET", "/greet").increment.
+        ZIO.succeed(Response.text("Hello World!")) @@ httpHitsMetric("GET", "/greet")
     }
 }

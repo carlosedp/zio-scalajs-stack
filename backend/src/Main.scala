@@ -22,20 +22,21 @@ object Main extends ZIOAppDefault {
     Runtime.removeDefaultLoggers >>> consoleJson(LogFormat.colored) ++ logMetrics
 
   // Add routes and middleware
-  val httpRoutes = (MetricsApp() ++ HomeApp() ++ GreetingApp())
-    @@ Middleware.cors(corsConfig)
-    @@ Middleware.metrics(MetricsApp.pathLabelMapper)
-    @@ Middleware.debug
+  val httpRoutes = (MetricsApp() ++ HomeApp() ++ GreetingApp()) @@
+    Middleware.cors(corsConfig) @@
+    Middleware.metrics(MetricsApp.pathLabelMapper) @@
+    Middleware.timeout(5.seconds) @@
+    Middleware.debug
 
   // ZIO-http server config
-  val config =
+  val config: ServerConfig =
     ServerConfig.default
       .port(SharedConfig.serverPort)
       .leakDetection(ServerConfig.LeakDetectionLevel.PARANOID)
       .maxThreads(2)
 
   // Define ZIO-http server
-  val server = Server
+  val server: ZIO[Any, Throwable, Nothing] = Server
     .serve(httpRoutes)
     .provide( // Add required layers
       ServerConfig.live(config),
@@ -50,8 +51,8 @@ object Main extends ZIOAppDefault {
     for {
       _ <- ZIO.logInfo(s"Server started at http://localhost:${SharedConfig.serverPort}")
       _ <- server.forkDaemon
+      f <- MetricsApp.gaugeTest.schedule(Schedule.spaced(5.second)).fork
       _ <- ZIO.logInfo(s"Started gaugetest with random Double every second")
-      f <- MetricsApp.gaugeTest.schedule(Schedule.spaced(1.second)).fork
       _ <- f.join
     } yield ExitCode.success
 
