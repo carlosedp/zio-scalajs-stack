@@ -28,7 +28,7 @@ jobs:
       id: coursier-cache
 
     - name: Check Formatting
-      run: ./mill run fmt
+      run: ./mill run checkfmt
 
     - name: Setup Nodejs
       uses: actions/setup-node@v3

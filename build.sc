@@ -177,11 +177,13 @@ object frontend extends ScalaJSModule with Common {
 // -----------------------------------------------------------------------------
 // Command Aliases
 // -----------------------------------------------------------------------------
-val aliases = Map(
-  "lint"    -> Seq("__.fix", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources"),
-  "fmt"     -> Seq("mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources"),
-  "deps"    -> Seq("mill.scalalib.Dependency/showUpdates"),
-  "testall" -> Seq("__.test"),
+// Alias commands are run like `./mill run [alias]`
+// Define the alias as a map element containing the alias name and a Seq with the tasks to be executed
+val aliases: Map[String, Seq[String]] = Map(
+  "lint"     -> Seq("__.fix", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources"),
+  "checkfmt" -> Seq("mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources"),
+  "deps"     -> Seq("mill.scalalib.Dependency/showUpdates"),
+  "testall"  -> Seq("__.test"),
 )
 
 // The toplevel alias runner
@@ -193,6 +195,7 @@ def run(ev: eval.Evaluator, alias: String) = T.command {
         t.flatMap(x => x +: Seq("+")).flatMap(x => x.split(" ")).dropRight(1),
         mill.define.SelectMode.Separated,
       )(identity)
-    // case None => println(s"The task alias "$alias" does not exist.")
+    case None => println(s"${Console.RED}ERROR:${Console.RESET} The task alias \"$alias\" does not exist.")
   }
+  ()
 }
