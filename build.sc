@@ -11,7 +11,7 @@ import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.2`
 import io.github.davidgregory084.TpolecatModule
 import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
 import io.github.alexarchambault.millnativeimage.NativeImage
-import $ivy.`com.carlosedp::mill-docker-nativeimage::0.3.0`
+import $ivy.`com.carlosedp::mill-docker-nativeimage::0.5.0`
 import com.carlosedp.milldockernative.DockerNative
 
 object versions {
@@ -25,7 +25,6 @@ object versions {
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.3.0"
   val scalatest       = "3.2.15"
-  val coursier        = "v2.1.0-RC5"
   val graalvm         = "graalvm-java17:22.3.1"
 }
 
@@ -68,11 +67,10 @@ object backend
   def dockerPort  = 8080
   object dockerNative extends DockerNativeConfig with NativeImageConfig {
     // Config for the Native binary (GraalVM) based Docker image
-    override def isDockerBuild = T.input(sys.props.get("os.name").contains("Linux") == false)
-    def nativeImageClassPath   = runClasspath()
-    def baseImage              = "ubuntu:22.04"
-    def tags                   = List(dockerImage + "-native")
-    def exposedPorts           = Seq(dockerPort)
+    def nativeImageClassPath = runClasspath()
+    def baseImage            = "ubuntu:22.04"
+    def tags                 = List(dockerImage + "-native")
+    def exposedPorts         = Seq(dockerPort)
   }
 
   object docker extends DockerConfig {
@@ -96,7 +94,7 @@ object backend
 trait NativeImageConfig extends NativeImage {
   def nativeImageName         = "backend"
   def nativeImageMainClass    = "com.carlosedp.zioscalajs.backend.Main"
-  def nativeImageGraalVmJvmId = T(sys.env.getOrElse("GRAALVM_ID", versions.graalvm))
+  def nativeImageGraalVmJvmId = T(versions.graalvm)
   // Options required by ZIO to be built by GraalVM
   // Ref. https://github.com/jamesward/hello-zio-http/blob/graalvm/build.sbt#L97-L108
   def nativeImageOptions = Seq(
@@ -123,30 +121,6 @@ trait NativeImageConfig extends NativeImage {
     "--initialize-at-run-time=io.netty.incubator.channel.uring.IOUring",
     "--initialize-at-run-time=io.netty.incubator.channel.uring.IOUringEventLoopGroup",
   ) ++ (if (sys.props.get("os.name").contains("Linux")) Seq("--static") else Seq.empty)
-
-  // Define parameters to have the Native Image to be built in Docker
-  // generating a Linux binary to be packed into the container image.
-  def isDockerBuild   = T.input(T.ctx.env.get("DOCKER_NATIVEIMAGE") != None)
-  def baseDockerImage = T("carlosedp/nativeimagebase:22.04")
-  def coursierDownloadURL =
-    s"https://github.com/coursier/coursier/releases/download/${versions.coursier}/cs-${sys.props.get("os.arch").get}-pc-linux.gz"
-  def buildBaseDockerImage =
-    T.input {
-      os.proc("docker", "build", "-t", baseDockerImage(), ".", "-f", "Dockerfile.nativeImage").call(check = false)
-      baseDockerImage()
-    }
-  def nativeImageDockerParams = T {
-    if (isDockerBuild() == true) {
-      Some(
-        NativeImage.DockerParams(
-          imageName = buildBaseDockerImage(),
-          prepareCommand = "",
-          csUrl = coursierDownloadURL,
-          extraNativeImageArgs = Nil,
-        ),
-      )
-    } else { Option.empty[NativeImage.DockerParams] }
-  }
 }
 
 object frontend extends ScalaJSModule with Common {
