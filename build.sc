@@ -21,7 +21,7 @@ object versions {
   val ziometrics      = "2.0.5"
   val ziologging      = "2.1.8"
   val ziohttp         = "0.0.3"
-  val sttp            = "3.8.9"
+  val sttp            = "3.8.10"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.3.0"
   val scalatest       = "3.2.15"
@@ -163,7 +163,12 @@ val aliases: Map[String, Seq[String]] = Map(
 )
 
 // The toplevel alias runner
-def run(ev: eval.Evaluator, alias: String) = T.command {
+def run(ev: eval.Evaluator, alias: String = "") = T.command {
+  if (alias == "") {
+    println("Use './mill run [alias]'.\nAvailable aliases:");
+    aliases.foreach(x => println(x._1 + " " * (15 - x._1.length) + " - Commands: (" + x._2.mkString(", ") + ")"))
+    sys.exit(1)
+  }
   aliases.get(alias) match {
     case Some(t) =>
       mill.main.MainModule.evaluateTasks(
