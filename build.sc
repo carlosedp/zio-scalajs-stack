@@ -17,10 +17,10 @@ import com.carlosedp.milldockernative.DockerNative
 object versions {
   val scala3          = "3.3.0-RC2"
   val scalajs         = "1.13.0"
-  val zio             = "2.0.6"
+  val zio             = "2.0.7"
   val ziometrics      = "2.0.5"
   val ziologging      = "2.1.8"
-  val ziohttp         = "0.0.3"
+  val ziohttp         = "0.0.4+6-79413b91-SNAPSHOT"
   val sttp            = "3.8.10"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.3.0"
@@ -84,6 +84,7 @@ object backend
     def ivyDeps = Agg(
       ivy"dev.zio::zio-test:${versions.zio}",
       ivy"dev.zio::zio-test-sbt:${versions.zio}",
+      ivy"dev.zio::zio-http-testkit:${versions.ziohttp}",
     )
     def testFramework = T("zio.test.sbt.ZTestFramework")
   }

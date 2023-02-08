@@ -12,7 +12,7 @@ object GreetingAppSpec extends ZIOSpecDefault {
     suite("Greet backend application")(
       test("should greet world") {
         for {
-          response <- greetApp(Request.get(URL(!! / "greet")))
+          response <- greetApp.runZIO(Request.get(URL(!! / "greet")))
           body     <- response.body.asString
         } yield assertTrue(
           response.status == Status.Ok,
@@ -21,7 +21,7 @@ object GreetingAppSpec extends ZIOSpecDefault {
       },
       test("should greet User if using path") {
         for {
-          response <- greetApp(Request.get(URL(!! / "greet" / "User")))
+          response <- greetApp.runZIO(Request.get(URL(!! / "greet" / "User")))
           body     <- response.body.asString
         } yield assertTrue(
           response.status == Status.Ok,
@@ -30,7 +30,7 @@ object GreetingAppSpec extends ZIOSpecDefault {
       },
       test("should greet User if using param") {
         for {
-          response <- greetApp(Request.get(URL(!! / "greet").setQueryParams("?name=User")))
+          response <- greetApp.runZIO(Request.get(URL(!! / "greet").setQueryParams("?name=User")))
           body     <- response.body.asString
         } yield assertTrue(
           response.status == Status.Ok,

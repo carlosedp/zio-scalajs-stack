@@ -11,7 +11,7 @@ object HomeSpec extends ZIOSpecDefault {
     suite("Main backend application")(
       test("root route should redirect to /greet") {
         for {
-          response <- HomeApp()(Request.get(URL(!!)))
+          response <- HomeApp().runZIO(Request.get(URL(!!)))
           body     <- response.body.asString
         } yield assertTrue(
           response.status == Status.TemporaryRedirect,
