@@ -15,13 +15,13 @@ import $ivy.`com.carlosedp::mill-docker-nativeimage::0.5.0`
 import com.carlosedp.milldockernative.DockerNative
 
 object versions {
-  val scala3          = "3.3.0-RC2"
+  val scala3          = "3.3.0-RC3"
   val scalajs         = "1.13.0"
-  val zio             = "2.0.7"
-  val ziometrics      = "2.0.5"
-  val ziologging      = "2.1.8"
+  val zio             = "2.0.9"
+  val ziometrics      = "2.0.6"
+  val ziologging      = "2.1.9"
   val ziohttp         = "0.0.4+6-79413b91-SNAPSHOT"
-  val sttp            = "3.8.10"
+  val sttp            = "3.8.11"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.3.0"
   val scalatest       = "3.2.15"
