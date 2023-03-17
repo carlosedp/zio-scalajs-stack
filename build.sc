@@ -17,13 +17,13 @@ import com.carlosedp.milldockernative.DockerNative
 object versions {
   val scala3          = "3.3.0-RC3"
   val scalajs         = "1.13.0"
-  val zio             = "2.0.9"
-  val ziometrics      = "2.0.6"
-  val ziologging      = "2.1.9"
-  val ziohttp         = "0.0.4+6-79413b91-SNAPSHOT"
-  val sttp            = "3.8.11"
+  val zio             = "2.0.10"
+  val ziometrics      = "2.0.7"
+  val ziologging      = "2.1.11"
+  val ziohttp         = "0.0.5"
+  val sttp            = "3.8.13"
   val organizeimports = "0.6.0"
-  val scalajsdom      = "2.3.0"
+  val scalajsdom      = "2.4.0"
   val scalatest       = "3.2.15"
   val graalvm         = "graalvm-java17:22.3.1"
 }
@@ -54,7 +54,10 @@ object backend
   def scalaVersion         = versions.scala3
   def nativeImageClassPath = runClasspath()
   override def scalacOptions = T {
-    super.scalacOptions() ++ Seq("-Wunused:imports") // Can be removed once it's integrated into tpolecat
+    super.scalacOptions() ++ Seq(
+      "-Wunused:imports",
+      "-Wvalue-discard",
+    ) // Can be removed once it's integrated into tpolecat
   }
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${versions.zio}",
@@ -64,20 +67,20 @@ object backend
   )
 
   def dockerImage = "docker.io/carlosedp/zioscalajs-backend"
-  def dockerPort  = 8080
+  def dockerPorts = Seq(8080)
   object dockerNative extends DockerNativeConfig with NativeImageConfig {
     // Config for the Native binary (GraalVM) based Docker image
     def nativeImageClassPath = runClasspath()
     def baseImage            = "ubuntu:22.04"
     def tags                 = List(dockerImage + "-native")
-    def exposedPorts         = Seq(dockerPort)
+    def exposedPorts         = dockerPorts
   }
 
   object docker extends DockerConfig {
     // Config for the JVM based Docker image
     def baseImage    = "eclipse-temurin:17-jdk"
     def tags         = List(dockerImage + "-jdk")
-    def exposedPorts = Seq(dockerPort)
+    def exposedPorts = dockerPorts
   }
 
   object test extends Tests with Common {

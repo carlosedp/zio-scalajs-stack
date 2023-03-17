@@ -4,35 +4,36 @@ package zioscalajs.backend
 import com.carlosedp.zioscalajs.shared.SharedConfig
 import zio.*
 import zio.http.*
-import zio.http.middleware.Cors.CorsConfig
+import zio.http.middleware.*
 import zio.http.model.Method
-import zio.logging.{LogFormat, consoleJson, logMetrics}
+import zio.logging.*
 import zio.metrics.connectors.MetricsConfig
 import zio.metrics.connectors.prometheus.{prometheusLayer, publisherLayer}
 
 object Main extends ZIOAppDefault {
   // Set CORS config
-  val corsConfig = CorsConfig(
+  val corsConfig = Cors.CorsConfig(
     allowedOrigins = _ == "*",                                                     // anyOrigin = true,
     allowedMethods = Some(Set(Method.PUT, Method.DELETE, Method.POST, Method.GET)),// anyMethod = true,
   )
 
   // Configure ZIO Logging
   override val bootstrap: ZLayer[ZIOAppArgs, Any, Any] =
-    Runtime.removeDefaultLoggers >>> consoleJson(LogFormat.colored) ++ logMetrics
+    Runtime.removeDefaultLoggers >>> consoleLogger(
+      ConsoleLoggerConfig(LogFormat.colored, LogFilter.acceptAll),
+    ) ++ logMetrics
 
   // Add routes and middleware
   val httpRoutes = (MetricsApp() ++ HomeApp() ++ GreetingApp()) @@
-    Middleware.cors(corsConfig) @@
-    Middleware.metrics(MetricsApp.pathLabelMapper) @@
-    Middleware.timeout(5.seconds) @@
-    Middleware.debug
+    HttpAppMiddleware.cors(corsConfig) @@
+    HttpAppMiddleware.metrics(MetricsApp.pathLabelMapper) @@
+    HttpAppMiddleware.timeout(5.seconds) @@
+    HttpAppMiddleware.debug
 
   // ZIO-http server config
   val config: ServerConfig =
     ServerConfig.default
       .port(SharedConfig.serverPort)
-      .leakDetection(ServerConfig.LeakDetectionLevel.PARANOID)
       .maxThreads(2)
 
   // Define ZIO-http server
