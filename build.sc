@@ -21,7 +21,7 @@ object versions {
   val ziometrics      = "2.0.7"
   val ziologging      = "2.1.11"
   val ziohttp         = "0.0.5"
-  val sttp            = "3.8.13"
+  val sttp            = "3.8.14"
   val organizeimports = "0.6.0"
   val scalajsdom      = "2.4.0"
   val scalatest       = "3.2.15"
@@ -41,6 +41,16 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
   }
 }
 
+// Shared config trait for Native Image and DockerNative build
+// Using the JavaModule to access the module's main class and name for the binary
+trait NativeImageConfig extends NativeImage {
+  def nativeImageName         = "backend"
+  def nativeImageMainClass    = "com.carlosedp.zioscalajs.backend.Main"
+  def nativeImageGraalVmJvmId = T(versions.graalvm)
+  def nativeImageOptions = super.nativeImageOptions() ++
+    (if (sys.props.get("os.name").contains("Linux")) Seq("--static") else Seq.empty)
+}
+
 // -----------------------------------------------------------------------------
 // Projects
 // -----------------------------------------------------------------------------
@@ -51,13 +61,18 @@ object backend
   with DockerModule // Build Docker images based on JVM using the app .jar
   with DockerNative // Build Docker images with app binary (GraalVM Native Image)
   with NativeImageConfig { // Uses config for Native image
-  def scalaVersion         = versions.scala3
+  def scalaVersion    = versions.scala3
+  def useNativeConfig = T.input(T.env.get("NATIVECONFIG_GEN").contains("true"))
+  def forkArgs = T {
+    if (useNativeConfig()) Seq(s"-agentlib:native-image-agent=config-merge-dir=${this}/resources/META-INF/native-image")
+    else Seq.empty
+  }
   def nativeImageClassPath = runClasspath()
   override def scalacOptions = T {
     super.scalacOptions() ++ Seq(
       "-Wunused:imports",
       "-Wvalue-discard",
-    ) // Can be removed once it's integrated into tpolecat
+    )
   }
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${versions.zio}",
@@ -91,40 +106,6 @@ object backend
     )
     def testFramework = T("zio.test.sbt.ZTestFramework")
   }
-}
-
-// Shared config trait for Native Image and DockerNative build
-// Using the JavaModule to access the module's main class and name for the binary
-trait NativeImageConfig extends NativeImage {
-  def nativeImageName         = "backend"
-  def nativeImageMainClass    = "com.carlosedp.zioscalajs.backend.Main"
-  def nativeImageGraalVmJvmId = T(versions.graalvm)
-  // Options required by ZIO to be built by GraalVM
-  // Ref. https://github.com/jamesward/hello-zio-http/blob/graalvm/build.sbt#L97-L108
-  def nativeImageOptions = Seq(
-    "--no-fallback",
-    "--enable-http",
-    "--enable-url-protocols=http,https",
-    "--install-exit-handlers",
-    "-Djdk.http.auth.tunneling.disabledSchemes=",
-    "--initialize-at-run-time=io.netty.channel.DefaultFileRegion",
-    "--initialize-at-run-time=io.netty.channel.epoll.Native",
-    "--initialize-at-run-time=io.netty.channel.epoll.Epoll",
-    "--initialize-at-run-time=io.netty.channel.epoll.EpollEventLoop",
-    "--initialize-at-run-time=io.netty.channel.epoll.EpollEventArray",
-    "--initialize-at-run-time=io.netty.channel.kqueue.KQueue",
-    "--initialize-at-run-time=io.netty.channel.kqueue.KQueueEventLoop",
-    "--initialize-at-run-time=io.netty.channel.kqueue.KQueueEventArray",
-    "--initialize-at-run-time=io.netty.channel.kqueue.Native",
-    "--initialize-at-run-time=io.netty.channel.unix.Limits",
-    "--initialize-at-run-time=io.netty.channel.unix.Errors",
-    "--initialize-at-run-time=io.netty.channel.unix.IovArray",
-    "--initialize-at-run-time=io.netty.handler.ssl.BouncyCastleAlpnSslUtils",
-    "--initialize-at-run-time=io.netty.handler.codec.compression.ZstdOptions",
-    "--initialize-at-run-time=io.netty.incubator.channel.uring.Native",
-    "--initialize-at-run-time=io.netty.incubator.channel.uring.IOUring",
-    "--initialize-at-run-time=io.netty.incubator.channel.uring.IOUringEventLoopGroup",
-  ) ++ (if (sys.props.get("os.name").contains("Linux")) Seq("--static") else Seq.empty)
 }
 
 object frontend extends ScalaJSModule with Common {
@@ -168,19 +149,12 @@ val aliases: Map[String, Seq[String]] = Map(
 
 // The toplevel alias runner
 def run(ev: eval.Evaluator, alias: String = "") = T.command {
-  if (alias == "") {
-    println("Use './mill run [alias]'.\nAvailable aliases:");
-    aliases.foreach(x => println(x._1 + " " * (15 - x._1.length) + " - Commands: (" + x._2.mkString(", ") + ")"))
-    sys.exit(1)
-  }
   aliases.get(alias) match {
     case Some(t) =>
-      mill.main.MainModule.evaluateTasks(
-        ev,
-        t.flatMap(x => x +: Seq("+")).flatMap(x => x.split(" ")).dropRight(1),
-        mill.define.SelectMode.Separated,
-      )(identity)
-    case None => println(s"${Console.RED}ERROR:${Console.RESET} The task alias \"$alias\" does not exist.")
+      mill.main.MainModule.evaluateTasks(ev, t.flatMap(_.split(' ')) :+ "+", mill.define.SelectMode.Separated)(identity)
+    case None =>
+      Console.err.println("Use './mill run [alias]'."); Console.out.println("Available aliases:")
+      aliases.foreach(x => Console.out.println(s"${x._1.padTo(15, ' ')} - Commands: (${x._2.mkString(", ")})"));
+      sys.exit(1)
   }
-  ()
 }
