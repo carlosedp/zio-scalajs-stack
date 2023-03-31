@@ -147,11 +147,7 @@ val aliases: Map[String, Seq[String]] = Map(
 def run(ev: eval.Evaluator, alias: String = "") = T.command {
   aliases.get(alias) match {
     case Some(t) =>
-      mill.main.MainModule.evaluateTasks(
-        ev,
-        t.flatMap(x => x +: Seq("+")).flatMap(x => x.split("\\s+")).dropRight(1),
-        mill.define.SelectMode.Separated,
-      )(identity)
+      mill.main.MainModule.evaluateTasks(ev, t.flatMap(x => Seq(x, "+")).flatMap(_.split("\\s+")).init, false)(identity)
     case None =>
       Console.err.println("Use './mill run [alias]'."); Console.out.println("Available aliases:")
       aliases.foreach(x => Console.out.println(s"${x._1.padTo(15, ' ')} - Commands: (${x._2.mkString(", ")})"));
