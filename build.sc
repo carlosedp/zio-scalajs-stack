@@ -115,10 +115,9 @@ object frontend extends ScalaJSModule with Common {
     ivy"org.scala-js::scalajs-dom::${versions.scalajsdom}",
     ivy"com.softwaremill.sttp.client3::core::${versions.sttp}",
   )
-
   def scalaJSUseMainModuleInitializer = true
-  def moduleSplitStyle                = T(ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend")))
-  def moduleKind                      = T(ModuleKind.ESModule)
+  def moduleKind                      = T(ModuleKind.CommonJSModule)
+  def jsEnvConfig                     = T(JsEnvConfig.ExoegoJsDomNodeJs(args = List("--dns-result-order=ipv4first")))
 
   // These two tasks are used by Vite to get update path
   def fastLinkOut() = T.command(println(fastLinkJS().dest.path))
@@ -129,9 +128,6 @@ object frontend extends ScalaJSModule with Common {
     def ivyDeps = Agg(
       ivy"org.scalatest::scalatest::${versions.scalatest}",
     )
-    def moduleKind       = T(ModuleKind.NoModule)
-    def moduleSplitStyle = T(ModuleSplitStyle.FewestModules)
-    def jsEnvConfig      = T(JsEnvConfig.JsDom())
   }
 }
 
@@ -151,7 +147,11 @@ val aliases: Map[String, Seq[String]] = Map(
 def run(ev: eval.Evaluator, alias: String = "") = T.command {
   aliases.get(alias) match {
     case Some(t) =>
-      mill.main.MainModule.evaluateTasks(ev, t.flatMap(_.split(' ')) :+ "+", mill.define.SelectMode.Separated)(identity)
+      mill.main.MainModule.evaluateTasks(
+        ev,
+        t.flatMap(x => x +: Seq("+")).flatMap(x => x.split("\\s+")).dropRight(1),
+        mill.define.SelectMode.Separated,
+      )(identity)
     case None =>
       Console.err.println("Use './mill run [alias]'."); Console.out.println("Available aliases:")
       aliases.foreach(x => Console.out.println(s"${x._1.padTo(15, ' ')} - Commands: (${x._2.mkString(", ")})"));
