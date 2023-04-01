@@ -117,7 +117,8 @@ object frontend extends ScalaJSModule with Common {
   )
   def scalaJSUseMainModuleInitializer = true
   def moduleKind                      = T(ModuleKind.CommonJSModule)
-  def jsEnvConfig                     = T(JsEnvConfig.ExoegoJsDomNodeJs(args = List("--dns-result-order=ipv4first")))
+  def jsEnvConfig                     = T(JsEnvConfig.JsDom())
+  def moduleSplitStyle = ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend"))
 
   // These two tasks are used by Vite to get update path
   def fastLinkOut() = T.command(println(fastLinkJS().dest.path))
@@ -128,6 +129,8 @@ object frontend extends ScalaJSModule with Common {
     def ivyDeps = Agg(
       ivy"org.scalatest::scalatest::${versions.scalatest}",
     )
+    def moduleKind = T(ModuleKind.NoModule)
+    def moduleSplitStyle = T(ModuleSplitStyle.FewestModules)
   }
 }
 
