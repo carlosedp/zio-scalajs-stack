@@ -116,8 +116,8 @@ object frontend extends ScalaJSModule with Common {
     ivy"com.softwaremill.sttp.client3::core::${versions.sttp}",
   )
   def scalaJSUseMainModuleInitializer = true
-  def moduleKind                      = T(ModuleKind.CommonJSModule)
-  def jsEnvConfig                     = T(JsEnvConfig.JsDom())
+  def moduleKind                      = T(ModuleKind.ESModule)
+  def jsEnvConfig                     = T(JsEnvConfig.JsDom(args = List("--dns-result-order=ipv4first")))
   def moduleSplitStyle = ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend"))
 
   // These two tasks are used by Vite to get update path
