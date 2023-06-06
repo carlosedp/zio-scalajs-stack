@@ -7,7 +7,7 @@ import org.scalatest.*
 import org.scalatest.flatspec.*
 import org.scalatest.matchers.*
 
-class FrontEndSpec extends AnyFlatSpec with should.Matchers {
+class FrontEndSpec extends AnyFlatSpec with should.Matchers:
   // Initialize Test for elements we don't create in Scala.js (exists in index.html)
   val appDiv = document.createElement("div")
   appDiv.id = "app"
@@ -29,9 +29,7 @@ class FrontEndSpec extends AnyFlatSpec with should.Matchers {
     button.textContent should be("Click me")
     messageCount should include("You clicked the button 0 times")
 
-    for (c <- 1 to 5) {
+    for c <- 1 to 5 do
       button.click()
       messageCount should include(s"You clicked the button ${c} times")
-    }
   }
-}

@@ -12,7 +12,7 @@ import zio.logging.*
 import zio.metrics.connectors.MetricsConfig
 import zio.metrics.connectors.prometheus.{prometheusLayer, publisherLayer}
 
-object Main extends ZIOAppDefault {
+object Main extends ZIOAppDefault:
   // Create CORS configuration
   val corsConfig: CorsConfig =
     CorsConfig(
@@ -26,7 +26,7 @@ object Main extends ZIOAppDefault {
   // Configure ZIO Logging
   override val bootstrap: ZLayer[ZIOAppArgs, Any, Any] =
     Runtime.removeDefaultLoggers >>> consoleLogger(
-      ConsoleLoggerConfig(LogFormat.colored, LogFilter.acceptAll),
+      ConsoleLoggerConfig(LogFormat.colored, LogFilter.acceptAll)
     ) ++ logMetrics
 
   // Add routes and middleware
@@ -40,13 +40,13 @@ object Main extends ZIOAppDefault {
   val configLayer =
     ZLayer.succeed(
       Server.Config.default
-        .port(SharedConfig.serverPort),
+        .port(SharedConfig.serverPort)
     )
 
   val nettyConfigLayer = ZLayer.succeed(
     NettyConfig.default
       .leakDetection(LeakDetectionLevel.DISABLED)
-      .maxThreads(8),
+      .maxThreads(8)
   )
 
   // Define ZIO-http server
@@ -63,12 +63,10 @@ object Main extends ZIOAppDefault {
 
   // Run the application
   def run: ZIO[Scope, Any, ExitCode] =
-    for {
+    for
       _ <- ZIO.logInfo(s"Server started at http://localhost:${SharedConfig.serverPort}")
       _ <- server.forkDaemon
       f <- MetricsApp.gaugeTest.schedule(Schedule.spaced(5.second)).fork
       _ <- ZIO.logInfo(s"Started gaugetest with random Double every second")
       _ <- f.join
-    } yield ExitCode.success
-
-}
+    yield ExitCode.success
