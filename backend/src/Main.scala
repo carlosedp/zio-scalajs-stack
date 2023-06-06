@@ -3,19 +3,25 @@ package zioscalajs.backend
 
 import com.carlosedp.zioscalajs.shared.SharedConfig
 import zio.*
+import zio.http.Header.{AccessControlAllowMethods, AccessControlAllowOrigin, Origin}
 import zio.http.*
-import zio.http.middleware.*
-import zio.http.model.Method
+import zio.http.internal.middlewares.Cors.CorsConfig
+import zio.http.netty.NettyConfig
+import zio.http.netty.NettyConfig.LeakDetectionLevel
 import zio.logging.*
 import zio.metrics.connectors.MetricsConfig
 import zio.metrics.connectors.prometheus.{prometheusLayer, publisherLayer}
 
 object Main extends ZIOAppDefault {
-  // Set CORS config
-  val corsConfig = Cors.CorsConfig(
-    allowedOrigins = _ == "*",                                                     // anyOrigin = true,
-    allowedMethods = Some(Set(Method.PUT, Method.DELETE, Method.POST, Method.GET)),// anyMethod = true,
-  )
+  // Create CORS configuration
+  val corsConfig: CorsConfig =
+    CorsConfig(
+      allowedOrigin = {
+        case origin @ Origin.Value(_, host, _) if host == "dev" => Some(AccessControlAllowOrigin.Specific(origin))
+        case _                                                  => None
+      },
+      allowedMethods = AccessControlAllowMethods(Method.PUT, Method.DELETE, Method.POST, Method.GET),
+    )
 
   // Configure ZIO Logging
   override val bootstrap: ZLayer[ZIOAppArgs, Any, Any] =
@@ -30,21 +36,29 @@ object Main extends ZIOAppDefault {
     HttpAppMiddleware.timeout(5.seconds) @@
     HttpAppMiddleware.debug
 
-  // ZIO-http server config
-  val config: ServerConfig =
-    ServerConfig.default
-      .port(SharedConfig.serverPort)
-      .maxThreads(2)
+  // ZIO-HTTP server config
+  val configLayer =
+    ZLayer.succeed(
+      Server.Config.default
+        .port(SharedConfig.serverPort),
+    )
+
+  val nettyConfigLayer = ZLayer.succeed(
+    NettyConfig.default
+      .leakDetection(LeakDetectionLevel.DISABLED)
+      .maxThreads(8),
+  )
 
   // Define ZIO-http server
   val server: ZIO[Any, Throwable, Nothing] = Server
     .serve(httpRoutes)
     .provide( // Add required layers
-      ServerConfig.live(config),
-      Server.live,
+      configLayer,
+      nettyConfigLayer,
+      Server.customized,
       publisherLayer,
       prometheusLayer,
-      ZLayer.succeed(MetricsConfig(200.millis)), // Metrics pull interval from internal store
+      ZLayer.succeed(MetricsConfig(500.millis)), // Metrics pull interval from internal store
     )
 
   // Run the application

@@ -1,7 +1,7 @@
 import mill._, mill.scalalib._, mill.scalalib.scalafmt._
 import mill.scalajslib._, mill.scalajslib.api._
 import mill.scalalib.api.Util.isScala3
-import coursier.maven.MavenRepository
+import coursier.Repositories
 
 import $ivy.`com.lihaoyi::mill-contrib-docker:$MILL_VERSION`
 import contrib.docker.DockerModule
@@ -9,23 +9,23 @@ import $ivy.`com.goyeau::mill-scalafix::0.2.11`
 import com.goyeau.mill.scalafix.ScalafixModule
 import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.2`
 import io.github.davidgregory084.TpolecatModule
-import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.24`
 import io.github.alexarchambault.millnativeimage.NativeImage
 import $ivy.`com.carlosedp::mill-docker-nativeimage::0.5.0`
 import com.carlosedp.milldockernative.DockerNative
 
 object versions {
-  val scala3          = "3.3.0-RC3"
-  val scalajs         = "1.13.0"
-  val zio             = "2.0.10"
-  val ziometrics      = "2.0.7"
-  val ziologging      = "2.1.11"
-  val ziohttp         = "0.0.5"
-  val sttp            = "3.8.14"
+  val scala3          = "3.3.0"
+  val scalajs         = "1.13.1"
+  val zio             = "2.0.15"
+  val ziometrics      = "2.0.8"
+  val ziologging      = "2.1.13"
+  val ziohttp         = "3.0.0-RC2"
+  val sttp            = "3.8.15"
   val organizeimports = "0.6.0"
-  val scalajsdom      = "2.4.0"
-  val scalatest       = "3.2.15"
-  val graalvm         = "graalvm-java17:22.3.1"
+  val scalajsdom      = "2.6.0"
+  val scalatest       = "3.2.16"
+  val graalvm         = "graalvm-java17:22.3.2"
 }
 
 trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
@@ -34,10 +34,8 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
     millSourcePath / os.up / "shared" / "src",
   )
   def scalafixIvyDeps = Agg(ivy"com.github.liancheng::organize-imports:${versions.organizeimports}")
-  def repositoriesTask = T.task { // Add snapshot repositories in case needed
-    super.repositoriesTask() ++ Seq("oss", "s01.oss")
-      .map(r => s"https://$r.sonatype.org/content/repositories/snapshots")
-      .map(MavenRepository(_))
+  def repositoriesTask = T.task {
+    super.repositoriesTask() ++ Seq(Repositories.sonatype("snapshots"), Repositories.sonatypeS01("snapshots"))
   }
 }
 
@@ -70,8 +68,8 @@ object backend
   def nativeImageClassPath = runClasspath()
   override def scalacOptions = T {
     super.scalacOptions() ++ Seq(
-      "-Wunused:imports",
-      "-Wvalue-discard",
+      // "-Wunused:imports",
+      "-Wvalue-discard"
     )
   }
   def ivyDeps = super.ivyDeps() ++ Agg(
@@ -118,7 +116,7 @@ object frontend extends ScalaJSModule with Common {
   def scalaJSUseMainModuleInitializer = true
   def moduleKind                      = T(ModuleKind.ESModule)
   def jsEnvConfig                     = T(JsEnvConfig.JsDom(args = List("--dns-result-order=ipv4first")))
-  def moduleSplitStyle = ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend"))
+  def moduleSplitStyle                = ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend"))
 
   // These two tasks are used by Vite to get update path
   def fastLinkOut() = T.command(println(fastLinkJS().dest.path))
@@ -127,9 +125,9 @@ object frontend extends ScalaJSModule with Common {
   object test extends Tests with Common with TestModule.ScalaTest {
     // Test dependencies
     def ivyDeps = Agg(
-      ivy"org.scalatest::scalatest::${versions.scalatest}",
+      ivy"org.scalatest::scalatest::${versions.scalatest}"
     )
-    def moduleKind = T(ModuleKind.NoModule)
+    def moduleKind       = T(ModuleKind.NoModule)
     def moduleSplitStyle = T(ModuleSplitStyle.FewestModules)
   }
 }
@@ -150,7 +148,7 @@ val aliases: Map[String, Seq[String]] = Map(
 def run(ev: eval.Evaluator, alias: String = "") = T.command {
   aliases.get(alias) match {
     case Some(t) =>
-      mill.main.MainModule.evaluateTasks(ev, t.flatMap(x => Seq(x, "+")).flatMap(_.split("\\s+")).init, false)(identity)
+      mill.main.MainModule.evaluateTasks(ev, t.flatMap(x => (x + " +").split("\\s+")).init, false)(identity)
     case None =>
       Console.err.println("Use './mill run [alias]'."); Console.out.println("Available aliases:")
       aliases.foreach(x => Console.out.println(s"${x._1.padTo(15, ' ')} - Commands: (${x._2.mkString(", ")})"));

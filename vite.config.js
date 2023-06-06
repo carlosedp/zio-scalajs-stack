@@ -1,12 +1,16 @@
 import { spawnSync } from "child_process";
 import { defineConfig } from "vite";
 
+// Config project name and web files directory
+var projectName = "frontend"
+var projectWebFiles = "web"
+
 function isDev() {
     return process.env.NODE_ENV !== "production";
 }
 
 function printMillTask(task) {
-    const args = ["-s", "--no-server", "--disable-ticker", `frontend.${task}`];
+    const args = ["-s", "--no-server", "--disable-ticker", `${projectName}.${task}`];
 
     const options = {
         stdio: [
@@ -31,7 +35,7 @@ const linkOutputDir = isDev()
     : printMillTask("fullLinkOut");
 
 export default defineConfig({
-    root: "frontend/web",
+    root: `${projectName}/${projectWebFiles}`,
     resolve: {
         alias: [
             {
