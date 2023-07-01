@@ -1,18 +1,21 @@
 import mill._, mill.scalalib._, mill.scalalib.scalafmt._
 import mill.scalajslib._, mill.scalajslib.api._
-import mill.scalalib.api.Util.isScala3
+import mill.scalalib.api.ZincWorkerUtil.isScala3
 import coursier.Repositories
 
 import $ivy.`com.lihaoyi::mill-contrib-docker:$MILL_VERSION`
 import contrib.docker.DockerModule
-import $ivy.`com.goyeau::mill-scalafix::0.2.11`
+import $ivy.`com.goyeau::mill-scalafix::0.3.1`
 import com.goyeau.mill.scalafix.ScalafixModule
-import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.2`
-import io.github.davidgregory084.TpolecatModule
-import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.24`
+// import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.3`
+// import io.github.davidgregory084.TpolecatModule
+trait TpolecatModule {} // TODO: Use real mill-tpolecat once released
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.25`
 import io.github.alexarchambault.millnativeimage.NativeImage
-import $ivy.`com.carlosedp::mill-docker-nativeimage::0.5.0`
+import $ivy.`com.carlosedp::mill-docker-nativeimage::0.6.0`
 import com.carlosedp.milldockernative.DockerNative
+import $ivy.`com.carlosedp::mill-aliases::0.2.1`
+import com.carlosedp.aliases._
 
 object versions {
   val scala3          = "3.3.0"
@@ -96,7 +99,7 @@ object backend
     def exposedPorts = dockerPorts
   }
 
-  object test extends Tests with Common {
+  object test extends ScalaTests with Common {
     def ivyDeps = Agg(
       ivy"dev.zio::zio-test:${versions.zio}",
       ivy"dev.zio::zio-test-sbt:${versions.zio}",
@@ -115,14 +118,14 @@ object frontend extends ScalaJSModule with Common {
   )
   def scalaJSUseMainModuleInitializer = true
   def moduleKind                      = T(ModuleKind.ESModule)
-  def jsEnvConfig                     = T(JsEnvConfig.JsDom(args = List("--dns-result-order=ipv4first")))
+  def jsEnvConfig                     = T(JsEnvConfig.JsDom())
   def moduleSplitStyle                = ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend"))
 
   // These two tasks are used by Vite to get update path
   def fastLinkOut() = T.command(println(fastLinkJS().dest.path))
   def fullLinkOut() = T.command(println(fullLinkJS().dest.path))
 
-  object test extends Tests with Common with TestModule.ScalaTest {
+  object test extends ScalaJSTests with Common with TestModule.ScalaTest {
     // Test dependencies
     def ivyDeps = Agg(
       ivy"org.scalatest::scalatest::${versions.scalatest}"
@@ -137,21 +140,9 @@ object frontend extends ScalaJSModule with Common {
 // -----------------------------------------------------------------------------
 // Alias commands are run like `./mill run [alias]`
 // Define the alias as a map element containing the alias name and a Seq with the tasks to be executed
-val aliases: Map[String, Seq[String]] = Map(
-  "lint"     -> Seq("__.fix", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources"),
-  "checkfmt" -> Seq("mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources"),
-  "deps"     -> Seq("mill.scalalib.Dependency/showUpdates"),
-  "testall"  -> Seq("__.test"),
-)
-
-// The toplevel alias runner
-def run(ev: eval.Evaluator, alias: String = "") = T.command {
-  aliases.get(alias) match {
-    case Some(t) =>
-      mill.main.MainModule.evaluateTasks(ev, t.flatMap(x => (x + " +").split("\\s+")).init, false)(identity)
-    case None =>
-      Console.err.println("Use './mill run [alias]'."); Console.out.println("Available aliases:")
-      aliases.foreach(x => Console.out.println(s"${x._1.padTo(15, ' ')} - Commands: (${x._2.mkString(", ")})"));
-      sys.exit(1)
-  }
+object MyAliases extends Aliases {
+  def lint     = alias("__.fix", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources")
+  def checkfmt = alias("mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources")
+  def deps     = alias("mill.scalalib.Dependency/showUpdates")
+  def testall  = alias("__.test")
 }
