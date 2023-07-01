@@ -28,7 +28,7 @@ jobs:
         id: coursier-cache
 
       - name: Check Formatting
-        run: ./mill -i run checkfmt
+        run: ./mill -i Alias/run checkfmt
 
       - name: Setup Nodejs
         uses: actions/setup-node@v3
@@ -39,7 +39,7 @@ jobs:
         run: npm install
 
       - name: Run tests for all projects
-        run: ./mill -i run testall
+        run: ./mill -i Alias/run testall
 
     # - name: Run code coverage
     #   run: ./mill coverage

@@ -138,8 +138,8 @@ object frontend extends ScalaJSModule with Common {
 // -----------------------------------------------------------------------------
 // Command Aliases
 // -----------------------------------------------------------------------------
-// Alias commands are run like `./mill run [alias]`
-// Define the alias as a map element containing the alias name and a Seq with the tasks to be executed
+// Alias commands are run with: `./mill Alias/run [alias]`
+// Define the alias name with the `alias` type with a sequence of tasks to be executed
 object MyAliases extends Aliases {
   def lint     = alias("__.fix", "mill.scalalib.scalafmt.ScalafmtModule/reformatAll __.sources")
   def checkfmt = alias("mill.scalalib.scalafmt.ScalafmtModule/checkFormatAll __.sources")
