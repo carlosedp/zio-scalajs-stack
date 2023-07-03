@@ -25,7 +25,6 @@ object versions {
   val ziologging      = "2.1.13"
   val ziohttp         = "3.0.0-RC2"
   val sttp            = "3.8.15"
-  val organizeimports = "0.6.0"
   val scalajsdom      = "2.6.0"
   val scalatest       = "3.2.16"
   val graalvm         = "graalvm-java17:22.3.2"
@@ -36,7 +35,6 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
     millSourcePath / "src",
     millSourcePath / os.up / "shared" / "src",
   )
-  def scalafixIvyDeps = Agg(ivy"com.github.liancheng::organize-imports:${versions.organizeimports}")
   def repositoriesTask = T.task {
     super.repositoriesTask() ++ Seq(Repositories.sonatype("snapshots"), Repositories.sonatypeS01("snapshots"))
   }
