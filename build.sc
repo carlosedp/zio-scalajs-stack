@@ -47,6 +47,8 @@ trait NativeImageConfig extends NativeImage {
   def nativeImageMainClass    = "com.carlosedp.zioscalajs.backend.Main"
   def nativeImageGraalVmJvmId = T(versions.graalvm)
   def nativeImageOptions = super.nativeImageOptions() ++
+    // GraalVM initializes all classes at runtime, so lets ignore all configs from jars since some change this behavior
+    Seq("--exclude-config", "/.*.jar", ".*.properties") ++
     (if (sys.props.get("os.name").contains("Linux")) Seq("--static") else Seq.empty)
 }
 
