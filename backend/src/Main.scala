@@ -67,6 +67,6 @@ object Main extends ZIOAppDefault:
       _ <- ZIO.logInfo(s"Server started at http://localhost:${SharedConfig.serverPort}")
       _ <- server.forkDaemon
       f <- MetricsApp.gaugeTest.schedule(Schedule.spaced(5.second)).fork
-      _ <- ZIO.logInfo(s"Started gaugetest with random Double every second")
+      _ <- ZIO.logInfo("Started gaugetest with random Double every second")
       _ <- f.join
     yield ExitCode.success

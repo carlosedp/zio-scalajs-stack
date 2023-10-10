@@ -23,7 +23,12 @@ object FrontEndApp:
     addButton(appnode, "Click me", addClickedMessage)
     addNode(appnode, "You clicked the button " + count.toString + " times.", "p", "clicked-message")
 
-  def addNode(targetNode: Node, text: String, nodeType: String = "p", id: String = ""): Node =
+  def addNode(
+      targetNode: Node,
+      text:       String,
+      nodeType:   String = "p",
+      id:         String = "",
+    ): Node =
     val n = document.createElement(nodeType)
     n.textContent = text
     n.id = id
@@ -33,7 +38,11 @@ object FrontEndApp:
     val node = document.getElementById(id)
     node.textContent = text
 
-  def addButton(targetNode: Node, text: String, onClick: () => Unit) =
+  def addButton(
+      targetNode: Node,
+      text:       String,
+      onClick:    () => Unit,
+    ) =
     val buttonNode = document.createElement("button")
     buttonNode.textContent = text
     buttonNode.addEventListener(
@@ -49,11 +58,11 @@ object FrontEndApp:
     updateNode("clicked-message", "You clicked the button " + count.toString + " times.")
 
   def queryBackend(
-    uri:      String,
-    callback: (Node, String, String, String) => Node,
-    node:     Node,
-    nodeType: String,
-  ) =
+      uri:      String,
+      callback: (Node, String, String, String) => Node,
+      node:     Node,
+      nodeType: String,
+    ) =
     println(s"Querying backend: $uri...")
     implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
     simpleHttpClient
