@@ -119,8 +119,7 @@ object frontend extends ScalaJSModule with Common {
     ivy"com.softwaremill.sttp.client3::core::${versions.sttp}",
   )
   def scalaJSUseMainModuleInitializer = true
-  def moduleKind                      = T(ModuleKind.ESModule)
-  def jsEnvConfig                     = T(JsEnvConfig.JsDom())
+  def moduleKind                      = ModuleKind.ESModule
   def moduleSplitStyle                = ModuleSplitStyle.SmallModulesFor(List("com.carlosedp.zioscalajs.frontend"))
 
   // These two tasks are used by Vite to get update path
@@ -132,8 +131,9 @@ object frontend extends ScalaJSModule with Common {
     def ivyDeps = Agg(
       ivy"org.scalatest::scalatest::${versions.scalatest}"
     )
-    def moduleKind       = T(ModuleKind.NoModule)
-    def moduleSplitStyle = T(ModuleSplitStyle.FewestModules)
+    def moduleKind       = ModuleKind.NoModule
+    def jsEnvConfig      = JsEnvConfig.JsDom()
+    def moduleSplitStyle = ModuleSplitStyle.FewestModules
   }
 }
 
