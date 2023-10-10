@@ -109,6 +109,10 @@
   "methods":[{"name":"<init>","parameterTypes":[] }]
 },
 {
+  "name":"mill.testrunner.entrypoint.TestRunnerMain",
+  "methods":[{"name":"main","parameterTypes":["java.lang.String[]"] }]
+},
+{
   "name":"sun.management.VMManagementImpl",
   "fields":[
     {"name":"compTimeMonitoringSupport"}, 

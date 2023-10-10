@@ -13,20 +13,20 @@ import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.25`
 import io.github.alexarchambault.millnativeimage.NativeImage
 import $ivy.`com.carlosedp::mill-docker-nativeimage::0.6.0`
 import com.carlosedp.milldockernative.DockerNative
-import $ivy.`com.carlosedp::mill-aliases::0.2.1`
+import $ivy.`com.carlosedp::mill-aliases::0.4.1`
 import com.carlosedp.aliases._
 
 object versions {
-  val scala3          = "3.3.0"
-  val scalajs         = "1.13.1"
-  val zio             = "2.0.15"
-  val ziometrics      = "2.0.8"
-  val ziologging      = "2.1.13"
-  val ziohttp         = "3.0.0-RC2"
-  val sttp            = "3.8.15"
-  val scalajsdom      = "2.6.0"
-  val scalatest       = "3.2.16"
-  val graalvm         = "graalvm-java17:22.3.2"
+  val scala3     = "3.3.1"
+  val scalajs    = "1.14.0"
+  val zio        = "2.0.18"
+  val ziometrics = "2.2.0"
+  val ziologging = "2.1.14"
+  val ziohttp    = "3.0.0-RC2"
+  val sttp       = "3.9.0"
+  val scalajsdom = "2.8.0"
+  val scalatest  = "3.2.17"
+  val graalvm    = "graalvm-java17:22.3.2"
 }
 
 trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
@@ -56,17 +56,12 @@ trait NativeImageConfig extends NativeImage {
 // -----------------------------------------------------------------------------
 
 object backend
-  extends Common    // Base config for the backend
-  with NativeImage  // Build binary based on GrallVM Native Image
-  with DockerModule // Build Docker images based on JVM using the app .jar
-  with DockerNative // Build Docker images with app binary (GraalVM Native Image)
-  with NativeImageConfig { // Uses config for Native image
-  def scalaVersion    = versions.scala3
-  def useNativeConfig = T.input(T.env.get("NATIVECONFIG_GEN").contains("true"))
-  def forkArgs = T {
-    if (useNativeConfig()) Seq(s"-agentlib:native-image-agent=config-merge-dir=${this}/resources/META-INF/native-image")
-    else Seq.empty
-  }
+    extends Common    // Base config for the backend
+    with NativeImage  // Build binary based on GrallVM Native Image
+    with DockerModule // Build Docker images based on JVM using the app .jar
+    with DockerNative // Build Docker images with app binary (GraalVM Native Image)
+    with NativeImageConfig { parent => // Uses config for Native image
+  def scalaVersion         = versions.scala3
   def nativeImageClassPath = runClasspath()
   override def scalacOptions = T {
     super.scalacOptions() ++ Seq(
@@ -74,10 +69,17 @@ object backend
       "-Wvalue-discard"
     )
   }
+  def useNativeConfig = T.input(T.env.get("NATIVECONFIG_GEN").contains("true"))
+  def forkArgs = T {
+    if (useNativeConfig())
+      Seq(s"-agentlib:native-image-agent=config-merge-dir=backend/resources/META-INF/native-image")
+    else Seq.empty
+  }
   def ivyDeps = super.ivyDeps() ++ Agg(
     ivy"dev.zio::zio:${versions.zio}",
     ivy"dev.zio::zio-http:${versions.ziohttp}",
     ivy"dev.zio::zio-metrics-connectors:${versions.ziometrics}",
+    ivy"dev.zio::zio-metrics-connectors-prometheus:${versions.ziometrics}",
     ivy"dev.zio::zio-logging:${versions.ziologging}",
   )
 
@@ -99,6 +101,7 @@ object backend
   }
 
   object test extends ScalaTests with Common {
+    def forkArgs = parent.forkArgs()
     def ivyDeps = Agg(
       ivy"dev.zio::zio-test:${versions.zio}",
       ivy"dev.zio::zio-test-sbt:${versions.zio}",
