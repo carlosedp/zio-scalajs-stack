@@ -12,7 +12,7 @@ import zio.http.*
  */
 object GreetingApp:
   def apply(): Http[Any, Nothing, Request, Response] =
-    Http.collectZIO[Request] {
+    Http.collectZIO[Request]:
       // GET /greet?name=:name or GET /greet?name=:name1&name=:name2
       case req @ (Method.GET -> Root / "greet") if req.url.queryParams.nonEmpty =>
         val names = req.url.queryParams.get("name").get.mkString(" and ")
@@ -26,4 +26,3 @@ object GreetingApp:
       case Method.GET -> Root / "greet" =>
         // httpHitsMetric("GET", "/greet").increment.
         ZIO.succeed(Response.text("Hello World!")) @@ MetricsApp.httpHitsMetric("GET", "/greet")
-    }

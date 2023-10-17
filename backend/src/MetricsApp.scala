@@ -22,13 +22,12 @@ object MetricsApp:
     yield double
 
   // Map calls to "/greet/some_name" to "/greet/:person" for metric aggregation
-  def pathLabelMapper: PartialFunction[Request, String] = { case Method.GET -> Root / "greet" / _ =>
-    "/greet/:person"
-  }
+  def pathLabelMapper: PartialFunction[Request, String] =
+    case Method.GET -> Root / "greet" / _ => "/greet/:person"
 
   def apply(): Http[PrometheusPublisher, Nothing, Request, Response] =
-    Http.collectZIO[Request] { case Method.GET -> Root / "metrics" =>
-      ZIO.serviceWithZIO[PrometheusPublisher](
-        _.get.map(Response.text)
-      ) @@ MetricsApp.httpHitsMetric("GET", "/metrics")
-    }
+    Http.collectZIO[Request]:
+      case Method.GET -> Root / "metrics" =>
+        ZIO.serviceWithZIO[PrometheusPublisher](
+          _.get.map(Response.text)
+        ) @@ MetricsApp.httpHitsMetric("GET", "/metrics")

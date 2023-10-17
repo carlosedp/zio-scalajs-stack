@@ -10,7 +10,7 @@ object GreetingAppSpec extends ZIOSpecDefault:
   val greetApp = GreetingApp()
   def spec =
     suite("Greet backend application")(
-      test("should greet world") {
+      test("should greet world"):
         for
           response <- greetApp.runZIO(Request.get(URL(Root / "greet")))
           body     <- response.body.asString
@@ -18,8 +18,8 @@ object GreetingAppSpec extends ZIOSpecDefault:
           response.status == Status.Ok,
           body == "Hello World!",
         )
-      },
-      test("should greet User if using path") {
+      ,
+      test("should greet User if using path"):
         for
           response <- greetApp.runZIO(Request.get(URL(Root / "greet" / "User")))
           body     <- response.body.asString
@@ -27,8 +27,8 @@ object GreetingAppSpec extends ZIOSpecDefault:
           response.status == Status.Ok,
           body == "Hello User!",
         )
-      },
-      test("should greet User if using query param") {
+      ,
+      test("should greet User if using query param"):
         for
           response <- greetApp.runZIO(Request.get(URL(Root / "greet", queryParams = QueryParams("name" -> "User"))))
           body     <- response.body.asString
@@ -36,8 +36,8 @@ object GreetingAppSpec extends ZIOSpecDefault:
           response.status == Status.Ok,
           body == "Hello User!",
         )
-      },
-      test("should greet Users if using multiple query params") {
+      ,
+      test("should greet Users if using multiple query params"):
         for
           response <-
             greetApp.runZIO(Request.get(URL(
@@ -48,6 +48,5 @@ object GreetingAppSpec extends ZIOSpecDefault:
         yield assertTrue(
           response.status == Status.Ok,
           body == "Hello User and User2!",
-        )
-      },
+        ),
     )

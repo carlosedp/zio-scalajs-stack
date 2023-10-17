@@ -8,7 +8,7 @@ object HomeSpec extends ZIOSpecDefault:
 
   def spec =
     suite("Main backend application")(
-      test("root route should redirect to /greet") {
+      test("root route should redirect to /greet"):
         for
           response <- HomeApp().runZIO(Request.get(URL(Root)))
           body     <- response.body.asString
@@ -17,5 +17,4 @@ object HomeSpec extends ZIOSpecDefault:
           response.headers(Header.Location).contains(Header.Location(URL(Root / "greet"))),
           body.isEmpty,
         )
-      }
     )

@@ -17,11 +17,10 @@ class FrontEndSpec extends AnyFlatSpec with should.Matchers:
 
   behavior of "Frontend App"
 
-  it should "contain a button in its body" in {
+  it should "contain a button in its body" in:
     document.querySelectorAll("button").count(_.textContent.contains("Click me")) should be(1)
-  }
 
-  it should "append 'You clicked the button!' text when the user clicks on the 'Click me' button" in {
+  it should "append 'You clicked the button!' text when the user clicks on the 'Click me' button" in:
     def messageCount = document.getElementById("clicked-message").textContent
     val button       = document.querySelector("button").asInstanceOf[html.Button]
 
@@ -32,4 +31,3 @@ class FrontEndSpec extends AnyFlatSpec with should.Matchers:
     for c <- 1 to 5 do
       button.click()
       messageCount should include(s"You clicked the button ${c} times")
-  }

@@ -67,6 +67,4 @@ object FrontEndApp:
     implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
     simpleHttpClient
       .send(quickRequest.get(uri"$uri"))
-      .map { response =>
-        callback(node, response.body, nodeType, "")
-      }
+      .map(response => callback(node, response.body, nodeType, ""))
