@@ -5,8 +5,8 @@ import zio.*
 import zio.http.*
 
 object HomeApp:
-  def apply(): Http[Any, Nothing, Request, Response] =
-    Http.collectZIO[Request]:
-      // GET /, redirect to /greet )
-      case Method.GET -> Root =>
-        ZIO.succeed(Response.redirect(URL(Root / "greet")))
+    def apply(): HttpApp[Any] = Routes(
+        Method.GET / "" -> handler(ZIO.succeed(Response.redirect(URL(Root / "greet")))
+            @@ MetricsApp.httpHitsMetric("GET", "/"))
+    ).toHttpApp
+end HomeApp
