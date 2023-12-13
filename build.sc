@@ -19,11 +19,11 @@ import com.carlosedp.aliases._
 object versions {
     val scala3     = "3.3.1"
     val scalajs    = "1.14.0"
-    val zio        = "2.0.18"
-    val ziometrics = "2.2.1"
-    val ziologging = "2.1.14"
-    val ziohttp    = "3.0.0-RC3"
-    val sttp       = "3.9.0"
+    val zio        = "2.0.20"
+    val ziometrics = "2.3.0"
+    val ziologging = "2.1.16"
+    val ziohttp    = "3.0.0-RC4"
+    val sttp       = "3.9.1"
     val scalajsdom = "2.8.0"
     val scalatest  = "3.2.17"
     val graalvm    = "graalvm-java17:22.3.2"
@@ -47,6 +47,7 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
             // "-Wconf:cat=other-pure-statement&msg=org.scalatest.Assertion:s",
         )
     }
+    def scalafixIvyDeps = super.scalacPluginIvyDeps() ++ Agg(ivy"com.github.xuwei-k::scalafix-rules:0.3.0")
 }
 
 // Shared config trait for Native Image and DockerNative build
