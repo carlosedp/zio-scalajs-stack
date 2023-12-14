@@ -23,9 +23,9 @@ class FrontEndSpec extends AnyFlatSpec with should.Matchers:
         def messageCount = document.getElementById("clicked-message").textContent
         val button       = document.querySelector("button").asInstanceOf[html.Button]
 
-        val _ = button should not be null
-        val _ = button.textContent should be("Click me")
-        val _ = messageCount should include("You clicked the button 0 times")
+        button should not be null
+        button.textContent should be("Click me")
+        messageCount should include("You clicked the button 0 times")
 
         for c <- 1 to 5 do
             button.click()

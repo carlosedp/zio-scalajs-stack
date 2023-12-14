@@ -16,4 +16,3 @@ object GreetingApp:
                 val names = req.url.queryParams.getAllOrElse("name", Seq("World")).mkString(" and ")
                 ZIO.succeed(Response.text(s"Hello $names!")) @@ MetricsApp.httpHitsMetric("GET", "/greet"),
     ).toHttpApp
-end GreetingApp

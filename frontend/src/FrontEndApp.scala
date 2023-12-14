@@ -19,7 +19,6 @@ object FrontEndApp:
         val _ = queryBackend(s"http://localhost:${SharedConfig.serverPort}/greet?name=${name}", addNode, hellodiv, "h1")
         val _ = addButton(appnode, "Click me", addClickedMessage)
         val _ = addNode(appnode, "You clicked the button " + count.toString + " times.", "p", "clicked-message")
-    end setupUI
 
     def addNode(
         targetNode: Node,
@@ -31,11 +30,11 @@ object FrontEndApp:
         n.textContent = text
         n.id = id
         targetNode.appendChild(n)
-    end addNode
 
     def updateNode(id: String, text: String) =
         val node = document.getElementById(id)
         node.textContent = text
+    end updateNode
 
     def addButton(
         targetNode: Node,
@@ -49,7 +48,6 @@ object FrontEndApp:
             (e: MouseEvent) => onClick(),
         )
         targetNode.appendChild(buttonNode)
-    end addButton
 
     var count = 0
     // @JSExportTopLevel("addClickedMessage")
@@ -68,5 +66,4 @@ object FrontEndApp:
         simpleHttpClient
             .send(quickRequest.get(uri"$uri"))
             .map(response => callback(node, response.body, nodeType, ""))
-    end queryBackend
 end FrontEndApp

@@ -17,4 +17,3 @@ object HomeSpec extends ZIOSpecDefault:
                     body.isEmpty,
                 )
         )
-end HomeSpec

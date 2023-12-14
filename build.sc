@@ -37,15 +37,14 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
     def repositoriesTask = T.task {
         super.repositoriesTask() ++ Seq(Repositories.sonatype("snapshots"), Repositories.sonatypeS01("snapshots"))
     }
-    override def scalacOptions = T {
-        super.scalacOptions() ++ Seq(
-            "-Wunused:all",
-            "-Wvalue-discard",
-            "-Wnonunit-statement",
-            "-Wconf:id=E176:v", // Disable Wnonunit-statement for ScalaTest Assertion
-            // "-Wconf:msg=org.scalatest.Assertion:s", // Disable Wnonunit-statement for ScalaTest Assertion
-            // "-Wconf:cat=other-pure-statement&msg=org.scalatest.Assertion:s",
-        )
+    def scalacOptions = T {
+        super.scalacOptions().filterNot(Set("-Xfatal-warnings")) ++ // Disable fatal warnings to use the silencer -Wconf
+            Seq(
+                "-Wunused:all",
+                "-Wvalue-discard",
+                "-Wnonunit-statement",
+                "-Wconf:msg=unused value of type org.scalatest.Assertion:s", // Disable ScalaTest Assertion warnings due -Wnonunit-statement
+            )
     }
     def scalafixIvyDeps = super.scalacPluginIvyDeps() ++ Agg(ivy"com.github.xuwei-k::scalafix-rules:0.3.0")
 }
@@ -139,6 +138,7 @@ object frontend extends ScalaJSModule with Common {
         def moduleKind       = ModuleKind.NoModule
         def jsEnvConfig      = JsEnvConfig.JsDom()
         def moduleSplitStyle = ModuleSplitStyle.FewestModules
+
     }
 }
 

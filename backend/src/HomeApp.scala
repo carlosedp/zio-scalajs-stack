@@ -9,4 +9,3 @@ object HomeApp:
         Method.GET / "" -> handler(ZIO.succeed(Response.redirect(URL(Root / "greet")))
             @@ MetricsApp.httpHitsMetric("GET", "/"))
     ).toHttpApp
-end HomeApp
