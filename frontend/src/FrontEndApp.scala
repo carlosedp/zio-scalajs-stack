@@ -34,7 +34,6 @@ object FrontEndApp:
     def updateNode(id: String, text: String) =
         val node = document.getElementById(id)
         node.textContent = text
-    end updateNode
 
     def addButton(
         targetNode: Node,
