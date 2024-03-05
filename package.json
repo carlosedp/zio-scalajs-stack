@@ -22,7 +22,7 @@
     "cleanall": "rm -rf .bloop .vscode .metals .bsp out target project/.bloop project/{project,.bloop,target} node_modules dist"
   },
   "devDependencies": {
-    "vite": "^5.1.4",
+    "vite": "^5.1.5",
     "sass": "^1.71.1"
   }
 }
