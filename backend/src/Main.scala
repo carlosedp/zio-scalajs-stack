@@ -25,7 +25,13 @@ object Main extends ZIOAppDefault:
     // Configure ZIO Logging
     override val bootstrap: ZLayer[ZIOAppArgs, Any, Any] =
         Runtime.removeDefaultLoggers
-            >>> consoleLogger(ConsoleLoggerConfig(LogFormat.colored, LogFilter.acceptAll))
+            >>> consoleLogger(ConsoleLoggerConfig(
+                LogFormat.colored,
+                LogFilter.LogLevelByNameConfig(
+                    LogLevel.Debug,
+                    Map("io.netty" -> LogLevel.Info, "io.grpc.netty" -> LogLevel.Info),
+                ),
+            ))
             ++ logMetrics
 
     // Add routes and middleware

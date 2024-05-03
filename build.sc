@@ -1,11 +1,10 @@
 import mill._, mill.scalalib._, mill.scalalib.scalafmt._
 import mill.scalajslib._, mill.scalajslib.api._
-import mill.scalalib.api.ZincWorkerUtil.isScala3
 import coursier.Repositories
 
 import $ivy.`com.lihaoyi::mill-contrib-docker:$MILL_VERSION`
 import contrib.docker.DockerModule
-import $ivy.`com.goyeau::mill-scalafix::0.3.1`
+import $ivy.`com.goyeau::mill-scalafix::0.3.2`
 import com.goyeau.mill.scalafix.ScalafixModule
 import $ivy.`io.github.davidgregory084::mill-tpolecat::0.3.5`
 import io.github.davidgregory084.TpolecatModule
@@ -17,19 +16,20 @@ import $ivy.`com.carlosedp::mill-aliases::0.4.1`
 import com.carlosedp.aliases._
 
 object versions {
-    val scala3     = "3.3.1"
-    val scalajs    = "1.14.0"
-    val zio        = "2.0.20"
-    val ziometrics = "2.3.0"
-    val ziologging = "2.1.16"
-    val ziohttp    = "3.0.0-RC4"
-    val sttp       = "3.9.1"
+    val scala3     = "3.3.3"
+    val scalajs    = "1.16.0"
+    val zio        = "2.0.22"
+    val ziometrics = "2.3.1"
+    val ziologging = "2.2.3"
+    val ziohttp    = "3.0.0-RC6"
+    val sttp       = "3.9.6"
     val scalajsdom = "2.8.0"
-    val scalatest  = "3.2.17"
-    val graalvm    = "graalvm-java17:22.3.2"
+    val scalatest  = "3.2.18"
+    val graalvm    = "graalvm-java21:21.0.2"
 }
 
 trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with ScalafixModule {
+    override def scalaVersion = versions.scala3
     def sources = T.sources(
         millSourcePath / "src",
         millSourcePath / os.up / "shared" / "src",
@@ -49,14 +49,13 @@ trait Common extends ScalaModule with TpolecatModule with ScalafmtModule with Sc
     def scalafixIvyDeps = super.scalacPluginIvyDeps() ++ Agg(ivy"com.github.xuwei-k::scalafix-rules:0.3.0")
 }
 
-// Shared config trait for Native Image and DockerNative build
-// Using the JavaModule to access the module's main class and name for the binary
+// Shared config trait for Native Image and DockerNative build78
 trait NativeImageConfig extends NativeImage {
     def nativeImageName         = "backend"
     def nativeImageMainClass    = "com.carlosedp.zioscalajs.backend.Main"
     def nativeImageGraalVmJvmId = T(versions.graalvm)
+    // GraalVM initializes all classes at runtime, so lets ignore all configs from jars since some change this behavior
     def nativeImageOptions = super.nativeImageOptions() ++
-        // GraalVM initializes all classes at runtime, so lets ignore all configs from jars since some change this behavior
         Seq("--exclude-config", "/.*.jar", ".*.properties") ++
         (if (sys.props.get("os.name").contains("Linux")) Seq("--static") else Seq.empty)
 }
@@ -71,15 +70,14 @@ object backend
     with DockerModule // Build Docker images based on JVM using the app .jar
     with DockerNative // Build Docker images with app binary (GraalVM Native Image)
     with NativeImageConfig { parent => // Uses config for Native image
-    def scalaVersion         = versions.scala3
     def nativeImageClassPath = runClasspath()
-    def useNativeConfig      = T.input(T.env.get("NATIVECONFIG_GEN").contains("true"))
+    def genNativeConfig      = T.input(T.env.get("NATIVECONFIG_GEN").contains("true"))
     def forkArgs = T {
-        if (useNativeConfig())
+        if (genNativeConfig())
             Seq(s"-agentlib:native-image-agent=config-merge-dir=backend/resources/META-INF/native-image")
         else Seq.empty
     }
-    def ivyDeps = super.ivyDeps() ++ Agg(
+    def ivyDeps = Agg(
         ivy"dev.zio::zio:${versions.zio}",
         ivy"dev.zio::zio-http:${versions.ziohttp}",
         ivy"dev.zio::zio-metrics-connectors:${versions.ziometrics}",
@@ -87,38 +85,34 @@ object backend
         ivy"dev.zio::zio-logging:${versions.ziologging}",
     )
 
-    def dockerImage = "docker.io/carlosedp/zioscalajs-backend"
-    def dockerPorts = Seq(8080)
     object dockerNative extends DockerNativeConfig with NativeImageConfig {
         // Config for the Native binary (GraalVM) based Docker image
         def nativeImageClassPath = runClasspath()
         def baseImage            = "ubuntu:22.04"
-        def tags                 = List(dockerImage + "-native")
-        def exposedPorts         = dockerPorts
+        def tags                 = List("docker.io/carlosedp/zioscalajs-backend-native")
+        def exposedPorts         = Seq(8080)
     }
 
     object docker extends DockerConfig {
         // Config for the JVM based Docker image
-        def baseImage    = "eclipse-temurin:17-jdk"
-        def tags         = List(dockerImage + "-jdk")
-        def exposedPorts = dockerPorts
+        def baseImage    = "eclipse-temurin:21-jre"
+        def tags         = List("docker.io/carlosedp/zioscalajs-backend-jre")
+        def exposedPorts = Seq(8080)
     }
 
-    object test extends ScalaTests with Common {
+    object test extends ScalaTests with TestModule.ZioTest with Common {
         def forkArgs = parent.forkArgs()
         def ivyDeps = Agg(
             ivy"dev.zio::zio-test:${versions.zio}",
             ivy"dev.zio::zio-test-sbt:${versions.zio}",
             ivy"dev.zio::zio-http-testkit:${versions.ziohttp}",
         )
-        def testFramework = T("zio.test.sbt.ZTestFramework")
     }
 }
 
 object frontend extends ScalaJSModule with Common {
-    def scalaVersion   = versions.scala3
     def scalaJSVersion = versions.scalajs
-    def ivyDeps = super.ivyDeps() ++ Agg(
+    def ivyDeps = Agg(
         ivy"org.scala-js::scalajs-dom::${versions.scalajsdom}",
         ivy"com.softwaremill.sttp.client3::core::${versions.sttp}",
     )

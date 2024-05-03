@@ -13,6 +13,6 @@ object GreetingApp:
         // GET /greet?name=:name or GET /greet?name=:name1&name=:name2 or GET /greet with default name
         Method.GET / "greet" ->
             handler: (req: Request) =>
-                val names = req.url.queryParams.getAllOrElse("name", Seq("World")).mkString(" and ")
+                val names = req.queryParamsOrElse("name", Seq("World")).mkString(" and ")
                 ZIO.succeed(Response.text(s"Hello $names!")) @@ MetricsApp.httpHitsMetric("GET", "/greet"),
     ).toHttpApp
